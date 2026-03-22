@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050810">
+<meta name="apple-mobile-web-app-capable" content="apple-mobile-web-app-capable">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cazador">
+<link rel="manifest" href="manifest.json">
+<title>Sistema del Cazador — Recomposición Corporal</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050810;--surface:#090d1a;--card:#0d1528;--border:#1a2a4a;
+  --accent:#4d8fff;--accent2:#7b5ea7;--gold:#f0b429;--green:#2dce89;
+  --red:#f5365c;--cyan:#00c9ff;--purple:#a855f7;--orange:#fb923c;
+  --text:#c8d8f0;--muted:#4a6080;--font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding-bottom:140px;font-size:15px}
+.hex-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 15%,rgba(77,143,255,.05) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 60% at 85% 85%,rgba(123,94,167,.05) 0%,transparent 60%)}
+.wrap{position:relative;z-index:1;max-width:480px;margin:0 auto}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(9,13,26,.95);position:sticky;top:0;z-index:50}
+.hdr-title{font:700 11px/1 var(--mono);color:var(--accent);letter-spacing:3px}
+.hdr-rank{font:700 11px/1 var(--mono);color:var(--gold);letter-spacing:2px}
+.sys-bar{padding:7px 16px;font:400 10px/1 var(--mono);color:var(--muted);letter-spacing:1px;border-bottom:1px solid var(--border);background:rgba(77,143,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* NOTIFY */
+.notify{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);padding:8px 18px;font:700 11px/1 var(--mono);color:var(--accent);letter-spacing:1px;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;max-width:90vw}
+.notify.show{opacity:1}
+.notify.gold{border-color:var(--gold);color:var(--gold)}
+.notify.green{border-color:var(--green);color:var(--green)}
+
+/* PLAYER */
+.player{margin:14px 16px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-top:2px solid var(--accent);position:relative;overflow:hidden}
+.player::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle,rgba(77,143,255,.07) 0%,transparent 70%);pointer-events:none}
+.player-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:46px;height:46px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(77,143,255,.1);flex-shrink:0}
+.pname{font:700 18px/1 var(--font);color:#fff;letter-spacing:1px}
+.pclass{font:400 10px/1 var(--mono);color:var(--accent);letter-spacing:2px;margin-top:3px}
+.lvl-area{margin-left:auto;text-align:right}
+.lvl-badge{font:700 11px/1 var(--mono);color:var(--gold);padding:3px 8px;border:1px solid rgba(240,180,41,.3);background:rgba(240,180,41,.08)}
+.xp-info{font:400 10px/1 var(--mono);color:var(--muted);margin-top:4px}
+.xp-row{display:flex;align-items:center;gap:8px}
+.xp-lbl{font:400 10px/1 var(--mono);color:var(--muted);min-width:58px}
+.xp-bar{flex:1;height:5px;background:rgba(255,255,255,.07)}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent),#8ab4ff);transition:width .8s ease}
+.xp-pct{font:400 10px/1 var(--mono);color:var(--text);min-width:36px;text-align:right}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px}
+.sc{background:var(--card);border:1px solid var(--border);padding:10px 12px;position:relative;overflow:hidden;cursor:default}
+.sc.str::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--red)}
+.sc.agi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan)}
+.sc.end::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green)}
+.sc.dis::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--purple)}
+.sc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.sc-name{font:400 9px/1 var(--mono);color:var(--muted);letter-spacing:2px}
+.sc-icon{font-size:13px}
+.sc-val{font:700 22px/1 var(--font);color:#fff}
+.sc-bar{height:3px;background:rgba(255,255,255,.06);margin-top:5px}
+.sc-fill{height:100%;transition:width .8s ease}
+.str .sc-fill{background:var(--red)} .agi .sc-fill{background:var(--cyan)}
+.end .sc-fill{background:var(--green)} .dis .sc-fill{background:var(--purple)}
+
+/* TABS */
+.tabs{display:flex;margin:0 16px 14px;border-bottom:1px solid var(--border)}
+.tab{padding:8px 12px;font:600 10px/1 var(--mono);color:var(--muted);cursor:pointer;letter-spacing:1px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+.tab.active{color:var(--accent);border-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.panel{display:none}.panel.active{display:block}
+
+/* SECTION LABEL */
+.slbl{padding:5px 10px;font:600 9px/1 var(--mono);color:var(--accent);letter-spacing:3px;border-left:2px solid var(--accent);margin:0 16px 8px;background:rgba(77,143,255,.04)}
+.slbl.gold{color:var(--gold);border-color:var(--gold);background:rgba(240,180,41,.04)}
+.slbl.green{color:var(--green);border-color:var(--green);background:rgba(45,206,137,.04)}
+
+/* DAY LABEL */
+.day-hdr{margin:0 16px 10px;padding:10px 14px;background:rgba(77,143,255,.06);border:1px solid rgba(77,143,255,.2);display:flex;align-items:center;justify-content:space-between}
+.day-name{font:700 14px/1 var(--font);color:#fff;letter-spacing:1px}
+.day-type-badge{font:700 9px/1 var(--mono);letter-spacing:1.5px;padding:3px 8px}
+.day-type-badge.fuerza{background:rgba(240,180,41,.12);color:var(--gold);border:1px solid rgba(240,180,41,.25)}
+.day-type-badge.hiit{background:rgba(0,201,255,.1);color:var(--cyan);border:1px solid rgba(0,201,255,.25)}
+.day-type-badge.mict{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
+.day-type-badge.trote{background:rgba(251,146,60,.1);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
+.day-type-badge.descanso{background:rgba(74,96,128,.1);color:var(--muted);border:1px solid rgba(74,96,128,.25)}
+
+/* MISSION ITEMS */
+.mlist{margin:0 16px 12px;display:flex;flex-direction:column;gap:5px}
+.mi{background:var(--card);border:1px solid var(--border);padding:9px 12px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.mi:hover{border-color:var(--accent);background:rgba(77,143,255,.05)}
+.mi.done{opacity:.5}
+.mi.done .mi-name{text-decoration:line-through;color:var(--muted)}
+.mi.done .mcheck{background:var(--accent);border-color:var(--accent);color:#fff}
+.mi.boss{border-color:rgba(240,180,41,.25);background:rgba(240,180,41,.03)}
+.mi.boss:hover{border-color:var(--gold)}
+.mi.boss.done .mcheck{background:var(--gold);border-color:var(--gold);color:#000}
+.mi.food.done .mcheck{background:var(--green);border-color:var(--green);color:#fff}
+.mi.food:hover{border-color:var(--green)}
+.mcheck{width:18px;height:18px;flex-shrink:0;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s;margin-top:1px}
+.mi-info{flex:1;min-width:0}
+.mi-name{font:600 13px/1.3 var(--font);color:var(--text)}
+.mi-sub{font:400 10px/1.4 var(--mono);color:var(--muted);margin-top:3px}
+.mi-xp{font:700 10px/1 var(--mono);padding:2px 7px;flex-shrink:0;margin-top:1px}
+.mi-xp.str{color:var(--red);border:1px solid rgba(245,54,92,.2);background:rgba(245,54,92,.06)}
+.mi-xp.agi{color:var(--cyan);border:1px solid rgba(0,201,255,.2);background:rgba(0,201,255,.06)}
+.mi-xp.end{color:var(--green);border:1px solid rgba(45,206,137,.2);background:rgba(45,206,137,.06)}
+.mi-xp.dis{color:var(--purple);border:1px solid rgba(168,85,247,.2);background:rgba(168,85,247,.06)}
+.mi-xp.gold{color:var(--gold);border:1px solid rgba(240,180,41,.25);background:rgba(240,180,41,.08)}
+.boss-tag{position:absolute;top:2px;right:8px;font:700 8px/1 var(--mono);color:var(--gold);letter-spacing:2px}
+
+/* EXERCISE BLOCK */
+.ex-block{margin:0 16px 10px;background:var(--card);border:1px solid var(--border)}
+.ex-block-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ex-block-title{font:700 12px/1 var(--font);color:var(--text);letter-spacing:.5px}
+.ex-block-tag{font:700 8px/1 var(--mono);letter-spacing:1.5px;padding:2px 7px}
+.tag-str{background:rgba(240,180,41,.1);color:var(--gold);border:1px solid rgba(240,180,41,.2)}
+.tag-cardio{background:rgba(0,201,255,.1);color:var(--cyan);border:1px solid rgba(0,201,255,.2)}
+.tag-core{background:rgba(45,206,137,.1);color:var(--green);border:1px solid rgba(45,206,137,.2)}
+.tag-grip{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.2)}
+.ex-row{padding:8px 12px;border-bottom:1px solid rgba(26,42,74,.4);display:flex;align-items:flex-start;gap:8px;cursor:pointer;transition:background .15s}
+.ex-row:last-child{border-bottom:none}
+.ex-row:hover{background:rgba(77,143,255,.04)}
+.ex-row.done{opacity:.5}
+.ex-row.done .ex-name{text-decoration:line-through;color:var(--muted)}
+.ex-row.done .excheck{background:var(--accent);border-color:var(--accent);color:#fff}
+.excheck{width:16px;height:16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;margin-top:1px;transition:all .15s}
+.ex-info{flex:1}
+.ex-name{font:600 12px/1.3 var(--font);color:var(--text)}
+.ex-note{font:400 10px/1.4 var(--mono);color:var(--muted);margin-top:2px}
+.ex-reps{font:700 11px/1 var(--mono);color:var(--gold);flex-shrink:0;margin-top:1px;white-space:nowrap}
+
+/* MACRO CARDS */
+.macro-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 16px 14px}
+.mc{background:var(--card);border:1px solid var(--border);padding:8px 6px;text-align:center}
+.mc-val{font:700 16px/1 var(--font);margin-bottom:2px}
+.mc-lbl{font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:1px}
+.kcal{color:var(--gold)} .prot{color:var(--red)} .carb{color:var(--orange)} .fat{color:var(--cyan)}
+
+/* WEEKLY CALENDAR */
+.week-cal{margin:0 16px 14px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wday{background:var(--card);border:1px solid var(--border);padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s}
+.wday.today{border-color:var(--accent)}
+.wday.rest{opacity:.5}
+.wday-name{font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:1px;margin-bottom:5px}
+.wday-icon{font-size:14px;margin-bottom:3px}
+.wday-type{font:700 7px/1 var(--mono);color:var(--muted);letter-spacing:.5px}
+.wday.active-day .wday-type{color:var(--accent)}
+.wday.done-day{background:rgba(45,206,137,.08);border-color:rgba(45,206,137,.3)}
+.wday.done-day .wday-type{color:var(--green)}
+
+/* PROGRESS STATS */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px}
+.pcard{background:var(--card);border:1px solid var(--border);padding:10px 12px;text-align:center}
+.pcard-val{font:700 22px/1 var(--font);margin-bottom:3px}
+.pcard-lbl{font:400 9px/1 var(--mono);color:var(--muted);letter-spacing:1px}
+
+/* PHASE INFO */
+.phase-info{margin:0 16px 10px;padding:10px 14px;background:rgba(77,143,255,.06);border:1px solid rgba(77,143,255,.15);font:400 11px/1.6 var(--mono);color:var(--muted)}
+.phase-info strong{color:var(--accent);display:block;margin-bottom:4px;font-size:10px;letter-spacing:2px}
+
+/* ROPE TIMER */
+.rope-box{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);padding:12px}
+.rope-timer{text-align:center;padding:8px 0}
+.rope-time-display{font:700 42px/1 var(--mono);color:var(--cyan);letter-spacing:4px}
+.rope-phase{font:700 10px/1 var(--mono);color:var(--muted);letter-spacing:3px;margin-top:4px}
+.rope-rounds{font:400 11px/1 var(--mono);color:var(--muted);margin-top:4px}
+.rope-btns{display:flex;gap:8px;margin-top:12px}
+.rbtn{flex:1;padding:8px;border:1px solid var(--border);background:transparent;color:var(--text);font:700 10px/1 var(--mono);letter-spacing:2px;cursor:pointer;transition:all .2s}
+.rbtn:hover{border-color:var(--accent);color:var(--accent)}
+.rbtn.start{border-color:var(--cyan);color:var(--cyan)}
+.rbtn.stop{border-color:var(--red);color:var(--red)}
+
+/* RESET BTN */
+.reset-btn{display:block;margin:8px 16px 16px;padding:9px;width:calc(100% - 32px);background:transparent;border:1px solid var(--border);color:var(--muted);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer;transition:all .2s;text-align:center}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* CUSTOM FOOD FORM */
+.custom-form{margin:0 16px 14px;background:var(--card);border:1px solid rgba(240,180,41,.25);padding:12px 14px}
+.custom-form-title{font:700 10px/1 var(--mono);color:var(--gold);letter-spacing:2px;margin-bottom:10px}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.cf-row.full{grid-template-columns:1fr}
+.cf-field{display:flex;flex-direction:column;gap:3px}
+.cf-label{font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:1px}
+.cf-input{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font:400 12px/1 var(--mono);padding:7px 8px;outline:none;width:100%;transition:border-color .2s}
+.cf-input:focus{border-color:var(--gold)}
+.cf-input::placeholder{color:var(--muted)}
+.cf-btn{margin-top:8px;padding:8px;width:100%;background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.3);color:var(--gold);font:700 10px/1 var(--mono);letter-spacing:2px;cursor:pointer;transition:all .2s}
+.cf-btn:hover{background:rgba(240,180,41,.15);border-color:var(--gold)}
+.custom-meal-item{background:var(--card);border:1px solid rgba(240,180,41,.2);padding:9px 12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;transition:all .2s}
+.custom-meal-item:hover{border-color:var(--gold)}
+.custom-meal-item.done{opacity:.5}
+.custom-meal-item.done .mi-name{text-decoration:line-through;color:var(--muted)}
+.custom-meal-item.done .mcheck{background:var(--gold);border-color:var(--gold);color:#000}
+.del-btn{width:18px;height:18px;flex-shrink:0;border:1px solid rgba(245,54,92,.3);background:transparent;color:var(--red);font:700 10px/1 var(--mono);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.del-btn:hover{background:rgba(245,54,92,.1)}
+
+/* SOUND TOGGLE */
+.sound-toggle{display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:7px 10px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+.sound-lbl{font:400 9px/1 var(--mono);color:var(--muted);letter-spacing:1px;flex:1}
+.sound-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .2s}
+.sound-dot.on{background:var(--green)}
+
+/* ============================================================
+   EPIC MODALS — Solo Leveling style
+   ============================================================ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0);pointer-events:none;
+  transition:background .3s;
+}
+.modal-overlay.active{background:rgba(0,0,8,.88);pointer-events:all;}
+.modal-box{
+  position:relative;width:90%;max-width:340px;
+  background:#07091a;border:1px solid var(--border);
+  padding:28px 22px 22px;text-align:center;
+  transform:scale(.85) translateY(30px);opacity:0;
+  transition:transform .35s cubic-bezier(.175,.885,.32,1.275),opacity .3s;
+  overflow:hidden;
+}
+.modal-overlay.active .modal-box{transform:scale(1) translateY(0);opacity:1;}
+.modal-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.modal-line-top{position:absolute;top:0;left:0;right:0;height:2px;}
+.modal-icon{font-size:48px;margin-bottom:8px;display:block;line-height:1;}
+.modal-sys{font:400 9px/1 var(--mono);letter-spacing:3px;margin-bottom:10px;}
+.modal-title{font:800 26px/1.1 var(--font);color:#fff;margin-bottom:6px;letter-spacing:1px;}
+.modal-subtitle{font:700 12px/1 var(--mono);letter-spacing:3px;margin-bottom:14px;}
+.modal-body{font:400 12px/1.7 var(--mono);color:var(--muted);margin-bottom:18px;}
+.modal-stats{display:flex;justify-content:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.modal-stat{padding:6px 14px;border:1px solid;text-align:center;}
+.modal-stat-val{font:700 18px/1 var(--font);}
+.modal-stat-lbl{font:400 8px/1 var(--mono);letter-spacing:1px;margin-top:3px;opacity:.7;}
+.modal-close{padding:10px 32px;font:700 10px/1 var(--mono);letter-spacing:3px;cursor:pointer;transition:all .2s;border:none;}
+.modal-close:hover{filter:brightness(1.2);}
+
+/* ============================================================
+   MUSIC PLAYER — fixed bottom bar
+   ============================================================ */
+.player-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(7,9,26,.97);border-top:1px solid var(--border);
+  max-width:480px;margin:0 auto;
+}
+.player-main{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px;
+}
+.player-track{flex:1;min-width:0}
+.player-track-name{
+  font:700 12px/1 var(--font);color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.5px;
+}
+.player-track-status{font:400 9px/1 var(--mono);color:var(--muted);margin-top:3px;letter-spacing:1px}
+.player-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pctrl{
+  width:30px;height:30px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;font-size:13px;
+  flex-shrink:0;
+}
+.pctrl:hover{border-color:var(--accent);color:var(--accent)}
+.pctrl.active{border-color:var(--accent);color:var(--accent);background:rgba(77,143,255,.1)}
+.pctrl.play-btn{width:36px;height:36px;font-size:15px;border-color:rgba(77,143,255,.4)}
+.pctrl.play-btn:hover{background:rgba(77,143,255,.15)}
+.player-progress{
+  height:2px;background:rgba(255,255,255,.06);
+  position:relative;cursor:pointer;margin:0 14px;
+}
+.player-progress-fill{height:100%;background:var(--accent);width:0%;transition:width .5s linear;pointer-events:none}
+.player-upload-row{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px 8px;border-top:1px solid rgba(26,42,74,.6);
+}
+.player-upload-label{
+  font:400 8px/1 var(--mono);color:var(--muted);
+  letter-spacing:1px;white-space:nowrap;flex-shrink:0;
+}
+.player-file-input{display:none}
+.player-upload-btn{
+  padding:4px 10px;background:rgba(77,143,255,.08);
+  border:1px solid rgba(77,143,255,.25);color:var(--accent);
+  font:700 8px/1 var(--mono);letter-spacing:1px;cursor:pointer;
+  white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.player-upload-btn:hover{background:rgba(77,143,255,.15)}
+.player-playlist{
+  font:400 8px/1 var(--mono);color:var(--muted);
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.5px;
+}
+.player-clear{
+  padding:4px 8px;background:transparent;
+  border:1px solid rgba(245,54,92,.25);color:var(--red);
+  font:700 8px/1 var(--mono);cursor:pointer;
+  flex-shrink:0;transition:all .2s;
+}
+.player-clear:hover{background:rgba(245,54,92,.1)}
+/* shuffle active glow */
+.pctrl.shuffle-on{border-color:var(--gold);color:var(--gold);background:rgba(240,180,41,.08)}
+
+/* SCROLL */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+<div class="hex-bg"></div>
+<div class="wrap">
+
+<div class="notify" id="notify"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-overlay" onclick="confirmCancel()">
+  <div class="modal-box" id="confirm-box" onclick="event.stopPropagation()" style="max-width:300px;padding:22px 20px">
+    <div class="modal-line-top" style="background:var(--accent)"></div>
+    <div style="font:400 9px/1 var(--mono);color:var(--accent);letter-spacing:3px;margin-bottom:10px">[ SISTEMA ] CONFIRMACIÓN</div>
+    <div style="font:700 15px/1.4 var(--font);color:#fff;margin-bottom:8px" id="confirm-msg"></div>
+    <div style="font:400 10px/1 var(--mono);color:var(--muted);margin-bottom:18px" id="confirm-sub"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="confirmCancel()" style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">CANCELAR</button>
+      <button onclick="confirmOK()" id="confirm-ok-btn" style="flex:1;padding:10px;background:rgba(45,206,137,.1);border:1px solid rgba(45,206,137,.35);color:var(--green);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEDIDAS MODAL -->
+<div class="modal-overlay" id="medidas-overlay" onclick="medidasCancel()">
+  <div class="modal-box" id="medidas-box" onclick="event.stopPropagation()" style="max-width:300px;padding:22px 20px">
+    <div class="modal-line-top" style="background:var(--cyan)"></div>
+    <div style="font:400 9px/1 var(--mono);color:var(--cyan);letter-spacing:3px;margin-bottom:10px">[ SISTEMA ] MEDIDAS CORPORALES</div>
+    <div style="font:700 14px/1 var(--font);color:#fff;margin-bottom:14px">REGISTRAR MEDIDAS</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="cf-field"><div class="cf-label">CINTURA (cm)</div><input class="cf-input" id="med-cintura" type="number" placeholder="80" min="30" max="200"></div>
+      <div class="cf-field"><div class="cf-label">CADERA (cm)</div><input class="cf-input" id="med-cadera" type="number" placeholder="95" min="30" max="200"></div>
+      <div class="cf-field"><div class="cf-label">MUSLO (cm)</div><input class="cf-input" id="med-muslo" type="number" placeholder="55" min="20" max="150"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="medidasCancel()" style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">CANCELAR</button>
+      <button onclick="medidasSave()" style="flex:1;padding:10px;background:rgba(0,201,255,.1);border:1px solid rgba(0,201,255,.35);color:var(--cyan);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">GUARDAR</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal-box" id="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-particles" id="modal-particles"></div>
+    <div class="modal-line-top" id="modal-line-top"></div>
+    <span class="modal-icon" id="modal-icon"></span>
+    <div class="modal-sys" id="modal-sys"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-subtitle" id="modal-subtitle"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-stats" id="modal-stats"></div>
+    <button class="modal-close" id="modal-close" onclick="closeModal()">[ CONTINUAR ]</button>
+  </div>
+</div>
+
+<div class="hdr">
+  <div class="hdr-title">&#11835; SISTEMA DEL CAZADOR</div>
+  <div class="hdr-rank" id="rank-disp">RANGO: E</div>
+</div>
+<div class="sys-bar" id="sys-bar">[ SISTEMA ] Quito, 2850 msnm — Recomposición corporal activa. El sistema te observa.</div>
+<div class="sound-toggle" onclick="toggleSound()">
+  <div class="sound-lbl">EFECTOS DE SONIDO</div>
+  <div class="sound-dot" id="sound-dot"></div>
+  <div style="font:700 9px/1 var(--mono);color:var(--muted)" id="sound-lbl-state">OFF</div>
+</div>
+<div id="notif-bar" style="display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:7px 10px;border:1px solid var(--border);background:var(--card);cursor:pointer" onclick="toggleNotifPanel()">
+  <div style="font:400 9px/1 var(--mono);color:var(--muted);letter-spacing:1px;flex:1">NOTIFICACIONES</div>
+  <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .2s" id="notif-dot"></div>
+  <div style="font:700 9px/1 var(--mono);color:var(--muted)" id="notif-state">OFF</div>
+</div>
+<div id="notif-panel" style="display:none;margin:0 16px 10px;background:var(--card);border:1px solid rgba(77,143,255,.2);padding:12px 14px">
+  <div style="font:700 9px/1 var(--mono);color:var(--accent);letter-spacing:2px;margin-bottom:10px">CONFIGURAR RECORDATORIOS</div>
+  <div style="font:400 10px/1.6 var(--mono);color:var(--muted);margin-bottom:10px">Recibirás una notificación con tus misiones pendientes del día. Requiere que la app esté instalada en pantalla de inicio.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <div>
+      <div style="font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:1px;margin-bottom:4px">HORA ENTRENAMIENTO</div>
+      <input type="time" id="notif-time-train" value="17:00" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font:400 13px/1 var(--mono);padding:7px 8px;outline:none">
+    </div>
+    <div>
+      <div style="font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:1px;margin-bottom:4px">RESUMEN DEL DÍA</div>
+      <input type="time" id="notif-time-summary" value="21:00" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font:400 13px/1 var(--mono);padding:7px 8px;outline:none">
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="requestNotifPermission()" style="flex:1;padding:8px;background:rgba(77,143,255,.1);border:1px solid rgba(77,143,255,.3);color:var(--accent);font:700 9px/1 var(--mono);letter-spacing:1px;cursor:pointer">ACTIVAR Y GUARDAR</button>
+    <button onclick="testNotification()" style="padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--muted);font:700 9px/1 var(--mono);letter-spacing:1px;cursor:pointer">PROBAR</button>
+  </div>
+  <div style="font:400 9px/1.5 var(--mono);color:var(--muted);margin-top:8px" id="notif-status-msg"></div>
+</div>
+
+<!-- PLAYER CARD -->
+<div class="player">
+  <div class="player-top">
+    <div class="avatar">&#9876;</div>
+    <div>
+      <div class="pname">CAZADOR</div>
+      <div class="pclass">CLASE: GUERRERO SOLITARIO</div>
+    </div>
+    <div class="lvl-area">
+      <div class="lvl-badge" id="lvl-badge">NIVEL 1</div>
+      <div class="xp-info" id="xp-info">0 / 1000 XP</div>
+    </div>
+  </div>
+  <div class="xp-row">
+    <div class="xp-lbl">PROGRESO</div>
+    <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    <div class="xp-pct" id="xp-pct">0%</div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="sc str"><div class="sc-hdr"><div class="sc-name">FUERZA</div><div class="sc-icon">&#128170;</div></div><div class="sc-val" id="sv-str">1</div><div class="sc-bar"><div class="sc-fill" id="sb-str" style="width:1%"></div></div></div>
+  <div class="sc agi"><div class="sc-hdr"><div class="sc-name">AGILIDAD</div><div class="sc-icon">&#9889;</div></div><div class="sc-val" id="sv-agi">1</div><div class="sc-bar"><div class="sc-fill" id="sb-agi" style="width:1%"></div></div></div>
+  <div class="sc end"><div class="sc-hdr"><div class="sc-name">RESISTENCIA</div><div class="sc-icon">&#10084;</div></div><div class="sc-val" id="sv-end">1</div><div class="sc-bar"><div class="sc-fill" id="sb-end" style="width:1%"></div></div></div>
+  <div class="sc dis"><div class="sc-hdr"><div class="sc-name">DISCIPLINA</div><div class="sc-icon">&#129504;</div></div><div class="sc-val" id="sv-dis">1</div><div class="sc-bar"><div class="sc-fill" id="sb-dis" style="width:1%"></div></div></div>
+</div>
+
+<!-- TABS -->
+<div style="display:flex;align-items:stretch;margin:0 0 14px;border-bottom:1px solid var(--border)">
+  <div class="tabs" style="flex:1;margin:0;border:none">
+    <div class="tab active" onclick="openTab('hoy')">HOY</div>
+    <div class="tab" onclick="openTab('semana')">SEMANA</div>
+    <div class="tab" onclick="openTab('nutricion')">NUTRICION</div>
+    <div class="tab" onclick="openTab('progreso')">PROGRESO</div>
+    <div class="tab" onclick="openTab('tienda')">TIENDA</div>
+  </div>
+  <div onclick="toggleDaySelector()" id="day-sel-btn" style="padding:0 10px;font:700 8px/1 var(--mono);color:var(--muted);letter-spacing:1px;cursor:pointer;display:flex;align-items:center;border-left:1px solid var(--border);white-space:nowrap;transition:color .2s" title="Ver otro día">📅</div>
+</div>
+
+<!-- TAB: HOY -->
+<!-- DAY SELECTOR -->
+<div id="day-selector" style="display:none;margin:0 16px 10px;background:var(--card);border:1px solid rgba(77,143,255,.2);padding:8px 10px">
+  <div style="font:400 8px/1 var(--mono);color:var(--muted);letter-spacing:2px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between">
+    <span>VISTA DE DIA</span>
+    <span onclick="closeDayPreview()" style="color:var(--red);cursor:pointer;font-size:10px">✕ CERRAR VISTA</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="day-sel-grid"></div>
+</div>
+<div class="panel active" id="tab-hoy"></div>
+
+<!-- TAB: TIENDA -->
+<div class="panel" id="tab-tienda">
+  <div style="margin:14px 16px 10px;background:var(--card);border:1px solid rgba(240,180,41,.3);border-top:2px solid var(--gold);padding:12px 16px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:24px">🏆</div>
+    <div>
+      <div style="font:400 9px/1 var(--mono);color:var(--muted);letter-spacing:2px;margin-bottom:4px">PUNTOS DE CAZADOR</div>
+      <div style="font:700 28px/1 var(--font);color:var(--gold)" id="pc-display">0 PC</div>
+      <div style="font:400 9px/1 var(--mono);color:var(--muted);margin-top:3px" id="pc-spent-display">Gastados: 0 PC · Total ganado: 0 PC</div>
+    </div>
+  </div>
+  <div style="margin:0 16px 10px;font:400 10px/1.6 var(--mono);color:var(--muted);padding:8px 10px;background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.1)">
+    Ganas PC completando tu día: ejercicio + comidas + disciplina + misiones boss. Canjéalos por recompensas reales sin culpa — te las ganaste.
+  </div>
+  <div class="slbl gold">TIENDA — RECOMPENSAS</div>
+  <div id="shop-list"></div>
+  <div class="slbl" style="color:var(--purple);border-color:var(--purple);background:rgba(168,85,247,.04)">MIS RECOMPENSAS PERSONALIZADAS</div>
+  <div id="custom-rewards-list"></div>
+  <div style="margin:0 16px 14px;background:var(--card);border:1px solid rgba(168,85,247,.25);padding:12px 14px">
+    <div style="font:700 9px/1 var(--mono);color:var(--purple);letter-spacing:2px;margin-bottom:8px">+ CREAR RECOMPENSA</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <input class="cf-input" id="rw-name" placeholder="Nombre (ej: Pizza con amigos)" maxlength="50">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="cf-field"><div class="cf-label">COSTO EN PC</div><input class="cf-input" id="rw-cost" type="number" placeholder="150" min="1" max="9999"></div>
+        <div class="cf-field"><div class="cf-label">CATEGORIA</div>
+          <select id="rw-cat" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font:400 12px/1 var(--mono);padding:7px 8px;outline:none;width:100%">
+            <option value="food">🍕 Comida</option>
+            <option value="entertainment">🎮 Entret.</option>
+            <option value="money">💸 Dinero</option>
+            <option value="shopping">🛍️ Compras</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="addCustomReward()" style="padding:8px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);color:var(--purple);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">&#11835; AGREGAR &#11835;</button>
+    </div>
+  </div>
+  <div class="slbl" style="color:var(--green);border-color:var(--green);background:rgba(45,206,137,.04)">HISTORIAL DE CANJES</div>
+  <div id="rewards-history"></div>
+</div>
+
+<!-- TAB: SEMANA -->
+<div class="panel" id="tab-semana">
+  <div class="slbl">PLAN SEMANAL</div>
+  <div class="week-cal" id="week-cal"></div>
+  <div style="margin:0 16px 10px;background:var(--card);border:1px solid rgba(77,143,255,.25);padding:12px 14px">
+    <div style="font:700 9px/1 var(--mono);color:var(--accent);letter-spacing:2px;margin-bottom:8px">FECHA DE INICIO DEL PLAN</div>
+    <div style="font:400 10px/1.5 var(--mono);color:var(--muted);margin-bottom:10px" id="start-date-display">No configurada — selecciona la fecha en que empezaste el plan.</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="date" id="date-picker" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font:400 13px/1 var(--mono);padding:8px 10px;outline:none">
+      <button onclick="confirmStartDate()" style="padding:8px 14px;background:rgba(77,143,255,.1);border:1px solid rgba(77,143,255,.35);color:var(--accent);font:700 9px/1 var(--mono);letter-spacing:1px;cursor:pointer;white-space:nowrap">GUARDAR</button>
+    </div>
+  </div>
+  <div class="slbl">FASE ACTUAL</div>
+  <div class="phase-info" id="phase-info"></div>
+  <div class="slbl gold">MISIONES BOSS — OBJETIVOS DEL PLAN</div>
+  <div class="mlist" id="boss-list"></div>
+</div>
+
+<!-- TAB: NUTRICION -->
+<div class="panel" id="tab-nutricion">
+  <div class="slbl">MACROS OBJETIVO DIA</div>
+  <div class="macro-row">
+    <div class="mc"><div class="mc-val kcal">~2100</div><div class="mc-lbl">KCAL</div></div>
+    <div class="mc"><div class="mc-val prot">131-164g</div><div class="mc-lbl">PROT</div></div>
+    <div class="mc"><div class="mc-val carb">210-240g</div><div class="mc-lbl">CARBS</div></div>
+    <div class="mc"><div class="mc-val fat">55-70g</div><div class="mc-lbl">GRASA</div></div>
+  </div>
+  <div class="slbl green">MACROS REGISTRADOS HOY</div>
+  <div class="macro-row">
+    <div class="mc"><div class="mc-val kcal" id="t-kcal">0</div><div class="mc-lbl">KCAL</div></div>
+    <div class="mc"><div class="mc-val prot" id="t-prot">0g</div><div class="mc-lbl">PROT</div></div>
+    <div class="mc"><div class="mc-val carb" id="t-carb">0g</div><div class="mc-lbl">CARBS</div></div>
+    <div class="mc"><div class="mc-val fat" id="t-fat">0g</div><div class="mc-lbl">GRASA</div></div>
+  </div>
+  <div id="food-section"></div>
+  <div class="slbl gold">COMIDA PERSONALIZADA DEL DIA</div>
+  <div class="custom-form">
+    <div class="custom-form-title">+ REGISTRAR COMIDA DIFERENTE</div>
+    <div class="cf-row full"><div class="cf-field"><div class="cf-label">NOMBRE DE LA COMIDA</div><input class="cf-input" id="cf-name" placeholder="Ej: Arroz con pollo del trabajo..." maxlength="60"></div></div>
+    <div class="cf-row">
+      <div class="cf-field"><div class="cf-label">PROTEINA (g)</div><input class="cf-input" id="cf-prot" type="number" placeholder="0" min="0" max="999"></div>
+      <div class="cf-field"><div class="cf-label">CARBOS (g)</div><input class="cf-input" id="cf-carb" type="number" placeholder="0" min="0" max="999"></div>
+    </div>
+    <div class="cf-row">
+      <div class="cf-field"><div class="cf-label">GRASAS (g)</div><input class="cf-input" id="cf-fat" type="number" placeholder="0" min="0" max="999"></div>
+      <div class="cf-field"><div class="cf-label">CALORIAS (kcal)</div><input class="cf-input" id="cf-kcal" type="number" placeholder="0" min="0" max="9999"></div>
+    </div>
+    <button class="cf-btn" onclick="addCustomMeal()">&#11835; AGREGAR COMIDA &#11835;</button>
+  </div>
+  <div id="custom-meal-list"></div>
+</div>
+
+<!-- TAB: PROGRESO -->
+<div class="panel" id="tab-progreso">
+  <div class="slbl">ESTADISTICAS GLOBALES</div>
+  <div class="pgrid">
+    <div class="pcard"><div class="pcard-val" style="color:var(--accent)" id="pg-total">0</div><div class="pcard-lbl">EJERCICIOS COMPLETADOS</div></div>
+    <div class="pcard"><div class="pcard-val" style="color:var(--gold)" id="pg-streak">0</div><div class="pcard-lbl">RACHA DE DIAS</div></div>
+    <div class="pcard"><div class="pcard-val" style="color:var(--green)" id="pg-xp">0</div><div class="pcard-lbl">XP TOTAL GANADO</div></div>
+    <div class="pcard"><div class="pcard-val" style="color:var(--purple)" id="pg-level">1</div><div class="pcard-lbl">NIVEL ACTUAL</div></div>
+  </div>
+  <div class="slbl">ACTIVIDAD — ULTIMOS 14 DIAS</div>
+  <div style="margin:0 16px 14px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="activity-grid"></div>
+  <div class="slbl">MEDIDAS CORPORALES</div>
+  <div style="margin:0 16px 14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="medidas-grid"></div>
+    <button class="reset-btn" style="margin:8px 0 0;width:100%" onclick="addMedida()">+ REGISTRAR MEDIDAS HOY</button>
+  </div>
+
+  <div class="slbl" style="color:var(--cyan);border-color:var(--cyan);background:rgba(0,201,255,.04)">BACKUP — EXPORTAR / IMPORTAR</div>
+  <div style="margin:0 16px 14px;background:var(--card);border:1px solid rgba(0,201,255,.2);padding:12px 14px">
+    <div style="font:400 10px/1.6 var(--mono);color:var(--muted);margin-bottom:10px">Guarda tu progreso como un código de texto. Cópialo y guárdalo en cualquier lugar (WhatsApp, notas, correo). Para restaurar en otro dispositivo, pégalo abajo y presiona IMPORTAR.</div>
+    <button onclick="exportData()" style="width:100%;padding:9px;background:rgba(0,201,255,.08);border:1px solid rgba(0,201,255,.3);color:var(--cyan);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer;margin-bottom:8px">EXPORTAR MI PROGRESO</button>
+    <textarea id="backup-input" placeholder="Pega aquí tu código de backup para importar en este dispositivo..." style="width:100%;min-height:80px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font:400 10px/1.5 var(--mono);padding:8px;resize:vertical;outline:none;margin-bottom:6px"></textarea>
+    <button onclick="importData()" style="width:100%;padding:9px;background:rgba(45,206,137,.08);border:1px solid rgba(45,206,137,.3);color:var(--green);font:700 9px/1 var(--mono);letter-spacing:2px;cursor:pointer">IMPORTAR Y RESTAURAR</button>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetDay()">&#11835; REINICIAR DIA &#11835;</button>
+
+</div>
+
+<!-- MUSIC PLAYER BAR -->
+<div class="player-bar" id="music-player-bar">
+  <div class="player-progress" id="player-progress" onclick="playerSeek(event)">
+    <div class="player-progress-fill" id="player-progress-fill"></div>
+  </div>
+  <div class="player-main">
+    <div class="player-track">
+      <div class="player-track-name" id="player-track-name">Sin canciones cargadas</div>
+      <div class="player-track-status" id="player-track-status">REPRODUCTOR — SUBE TUS CANCIONES</div>
+    </div>
+    <div class="player-controls">
+      <button class="pctrl" onclick="playerPrev()" title="Anterior">&#9664;&#9664;</button>
+      <button class="pctrl play-btn" id="play-btn" onclick="playerToggle()" title="Play/Pause">&#9654;</button>
+      <button class="pctrl" onclick="playerNext()" title="Siguiente">&#9654;&#9654;</button>
+      <button class="pctrl" id="shuffle-btn" onclick="playerToggleShuffle()" title="Shuffle">&#8597;</button>
+    </div>
+  </div>
+  <div class="player-upload-row">
+    <div class="player-upload-label">PLAYLIST</div>
+    <input type="file" id="music-file-input" class="player-file-input" accept="audio/*" multiple onchange="playerLoadFiles(event)">
+    <button class="player-upload-btn" onclick="document.getElementById('music-file-input').click()">+ SUBIR CANCIONES</button>
+    <div class="player-playlist" id="player-playlist-info">0 canciones</div>
+    <button class="player-clear" onclick="playerClear()" title="Limpiar playlist">&#128465;</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DAYS = ['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
+const DAY_PLAN = [
+  {name:'DOMINGO',type:'descanso',icon:'🌙',badge:'DESCANSO',bclass:'descanso'},
+  {name:'LUNES',type:'fuerza',icon:'💪',badge:'RUTINA A',bclass:'fuerza'},
+  {name:'MARTES',type:'hiit',icon:'🪢',badge:'HIIT-JR',bclass:'hiit'},
+  {name:'MIERCOLES',type:'fuerza',icon:'💪',badge:'RUTINA B',bclass:'fuerza'},
+  {name:'JUEVES',type:'mict',icon:'🪢',badge:'MICT-JR',bclass:'mict'},
+  {name:'VIERNES',type:'fuerza',icon:'💪',badge:'RUTINA A',bclass:'fuerza'},
+  {name:'SABADO',type:'trote',icon:'🏃',badge:'TROTE',bclass:'trote'}
+];
+
+const RUTINA_A = [
+  {id:'cal-a',title:'Calentamiento (7 min)',tag:'SIEMPRE',tagcls:'tag-core',exercises:[
+    {id:'ca1',name:'Rotaciones de hombros',note:'Hacia adelante y atrás',reps:'20 c/dir.'},
+    {id:'ca2',name:'Rotaciones de cadera y muñecas',note:'',reps:'15 c/lado'},
+    {id:'ca3',name:'Jumping jacks',note:'',reps:'30 seg'},
+    {id:'ca4',name:'Sentadillas de calentamiento lentas',note:'',reps:'10 rep'},
+    {id:'ca5',name:'Cat-cow en cuadrupedia',note:'',reps:'10 rep'}
+  ]},
+  {id:'blq-a1',title:'Bloque 1 — Pecho, Hombros, Tríceps',tag:'FUERZA',tagcls:'tag-str',stat:'str',xp:80,exercises:[
+    {id:'a1',name:'Flexiones de pecho',note:'Sem 1-4: manos elevadas. Sem 5-8: normales. Sem 9-12: pies elevados',reps:'4×8-12'},
+    {id:'a2',name:'Press de pecho (M170)',note:'Últimas 2 reps difíciles con técnica',reps:'3×10-12'},
+    {id:'a3',name:'Fondos de tríceps en silla',note:'Manos en borde, codos a 90°',reps:'3×10-15'},
+    {id:'a4',name:'Extensión de tríceps en máquina',note:'Codos pegados al cuerpo',reps:'2×12-15'}
+  ]},
+  {id:'blq-a2',title:'Bloque 2 — Piernas y Glúteos',tag:'FUERZA',tagcls:'tag-str',stat:'str',xp:80,exercises:[
+    {id:'a5',name:'Sentadilla con peso corporal',note:'Talones al ancho de hombros. Sem 9+: búlgara',reps:'4×12-15'},
+    {id:'a6',name:'Extensión de pierna (M170)',note:'Excéntrico lento 3 seg',reps:'3×12-15'},
+    {id:'a7',name:'Puente de glúteo (hip thrust)',note:'Sostener 2 seg arriba. Sem 5+: single leg',reps:'3×15-20'},
+    {id:'a8',name:'Zancadas alternas (lunges)',note:'Rodilla trasera casi al suelo, alternar',reps:'2×10 c/pierna'}
+  ]},
+  {id:'blq-a3',title:'Bloque 3 — Core y Postura',tag:'POSTURA',tagcls:'tag-core',stat:'dis',xp:40,exercises:[
+    {id:'a9',name:'Plancha frontal',note:'Core anti-extensión',reps:'3×25-40 seg'},
+    {id:'a10',name:'Bird-dog',note:'Extender brazo der + pierna izq, sostener 3 seg',reps:'3×8 c/lado'},
+    {id:'a11',name:'Superman',note:'Levantar brazos y piernas a la vez desde boca abajo',reps:'2×12'},
+    {id:'a12',name:'Face pull / Retracción escapular (M170)',note:'Polea alta, jalar hacia la cara, codos arriba',reps:'3×15'},
+    {id:'a13',name:'Chin tuck',note:'Empujar barbilla hacia atrás, sostener 5 seg',reps:'2×10'}
+  ]}
+];
+
+const RUTINA_B = [
+  {id:'cal-b',title:'Calentamiento (7 min)',tag:'SIEMPRE',tagcls:'tag-core',exercises:[
+    {id:'cb1',name:'Rotaciones de hombros',note:'Hacia adelante y atrás',reps:'20 c/dir.'},
+    {id:'cb2',name:'Rotaciones de cadera y muñecas',note:'',reps:'15 c/lado'},
+    {id:'cb3',name:'Jumping jacks',note:'',reps:'30 seg'},
+    {id:'cb4',name:'Sentadillas de calentamiento lentas',note:'',reps:'10 rep'},
+    {id:'cb5',name:'Cat-cow en cuadrupedia',note:'',reps:'10 rep'}
+  ]},
+  {id:'blq-b1',title:'Bloque 1 — Espalda y Bíceps',tag:'FUERZA',tagcls:'tag-str',stat:'str',xp:80,exercises:[
+    {id:'b1',name:'Jalón al pecho / Lat pulldown (M170)',note:'Agarre amplio, jalar hasta la clavícula, bajar lento 3 seg',reps:'4×10-12'},
+    {id:'b2',name:'Remo sentado (M170)',note:'Espalda recta, jalar al abdomen, codos pegados',reps:'4×10-12'},
+    {id:'b3',name:'Remo invertido en mesa (body row)',note:'Más horizontal = más difícil',reps:'3×8-12'},
+    {id:'b4',name:'Curl de bíceps (M170)',note:'Codos fijos. Subir 2 seg, bajar 4 seg',reps:'3×12-15'}
+  ]},
+  {id:'blq-b2',title:'Bloque 2 — Agarre y Antebrazos',tag:'AGARRE',tagcls:'tag-grip',stat:'str',xp:30,exercises:[
+    {id:'b5',name:'Torsión de toalla',note:'Retorcer en ambas direcciones',reps:'3×30 seg'},
+    {id:'b6',name:'Curl de muñeca (M170 o mochila)',note:'Codo apoyado en muslo, flexionar muñeca hacia arriba',reps:'3×15-20'},
+    {id:'b7',name:'Extensión de dedos con liga',note:'Liga alrededor de los dedos, abrir contra resistencia',reps:'2×20-25'}
+  ]},
+  {id:'blq-b3',title:'Bloque 3 — Piernas Posterior + Core',tag:'FUERZA',tagcls:'tag-str',stat:'str',xp:60,exercises:[
+    {id:'b8',name:'Curl de pierna (M170)',note:'Femoral/isquiotibial, excéntrico lento 3 seg',reps:'3×12-15'},
+    {id:'b9',name:'Step-up en silla resistente',note:'Subir y bajar alternando piernas',reps:'3×10 c/pierna'},
+    {id:'b10',name:'Dead bug',note:'Bajar brazo der + pierna izq sin despegar zona lumbar',reps:'3×8 c/lado'},
+    {id:'b11',name:'Plancha lateral',note:'Glúteo medio + oblicuos',reps:'3×20-30 seg c/lado'},
+    {id:'b12',name:'Wall angels (ángeles en pared)',note:'Espalda y cabeza pegadas a la pared, deslizar brazos en L',reps:'3×10'}
+  ]}
+];
+
+const DAILY_DISCIPLINE = [
+  {id:'dd1',name:'Hidratación 2.5-3L',sub:'Crítico en Quito (2850 msnm)',xp:50,stat:'end'},
+  {id:'dd2',name:'Sueño 7-8 horas',sub:'La GH que repara músculo se libera en sueño profundo',xp:60,stat:'end'},
+  {id:'dd3',name:'Sin azúcar procesada',sub:'Seguir el plan nutricional del día',xp:50,stat:'dis'}
+];
+
+const BOSS_MISSIONS = [
+  {
+    id:'boss1',
+    name:'Primera Semana Completa',
+    sub:'Haz los 7 días del plan sin saltarte ninguna sesión',
+    crit:[
+      'Lun y Vie: Rutina A completa (todos los bloques)',
+      'Mar: HIIT-JR completado',
+      'Mié: Rutina B completa',
+      'Jue: MICT-JR completado',
+      'Sáb: Sesión de trote completada',
+      'Dom: Disciplina diaria marcada',
+      'Marca esta misión al terminar el domingo de tu primera semana'
+    ],
+    xp:600,stat:'dis',statv:5
+  },
+  {
+    id:'boss2',
+    name:'7 Días de Dieta Limpia',
+    sub:'Una semana sin azúcar procesada, sin saltar comidas del plan',
+    crit:[
+      'Los 7 días marcas "Sin azúcar procesada" en disciplina diaria',
+      'Los 7 días registras al menos 3 de las 5 comidas del plan',
+      'No cuenta si comes algo fuera del plan y no lo registras',
+      'Puedes usar comida personalizada — lo que importa es registrar',
+      'Marca al terminar el 7mo día consecutivo cumplido'
+    ],
+    xp:500,stat:'dis',statv:4
+  },
+  {
+    id:'boss3',
+    name:'Trote 5 min Sin Parar',
+    sub:'Corre 5 minutos continuos sin caminar en ningún momento',
+    crit:[
+      'Durante tu sesión del sábado, corre 5 min sin parar',
+      'Ritmo lento está bien — lo importante es no caminar',
+      'Si necesitas parar, no cuenta — inténtalo el siguiente sábado',
+      'Marca inmediatamente después de lograrlo ese sábado',
+      'Referencia: semanas 3-4 del protocolo de trote'
+    ],
+    xp:400,stat:'end',statv:4
+  },
+  {
+    id:'boss4',
+    name:'HIIT-JR: 10 Rondas Completas',
+    sub:'Completa 10 rondas de 1 min salto / 1 min descanso sin abandonar',
+    crit:[
+      'Sesión del martes, semanas 5-8 del plan',
+      'Debes completar las 10 rondas sin reducir el tiempo',
+      'Cadencia mínima: ~71 saltos por minuto en cada ronda de trabajo',
+      'En Quito (2850 msnm): si no puedes hablar durante el salto, vas bien',
+      'Marca al terminar la última ronda ese martes'
+    ],
+    xp:450,stat:'agi',statv:4
+  },
+  {
+    id:'boss5',
+    name:'Superar Récord en Jalón o Press',
+    sub:'Aumenta el peso en M170 en cualquiera de estos dos ejercicios',
+    crit:[
+      'Anota el peso con el que empezaste la semana 1',
+      'Cuando subas al menos 1 nivel de peso en la máquina M170, marca esta misión',
+      'Vale para: Jalón al pecho, Remo sentado, o Press de pecho',
+      'Las últimas 2 reps del nuevo peso deben ser difíciles pero con buena técnica',
+      'Referencia: suele ocurrir en semanas 3-5 si entrenas consistente'
+    ],
+    xp:350,stat:'str',statv:3
+  },
+  {
+    id:'boss6',
+    name:'Fase 2 Completada: 10 Series por Músculo',
+    sub:'Termina las semanas 5-8 llegando a ≥10 series por músculo por semana',
+    crit:[
+      'Al final de la semana 8, revisa: ¿completaste todos los bloques de Rutina A y B?',
+      'Rutina A+B en una semana = ~10-12 series por grupo muscular',
+      'Indica que llegaste a este volumen: no saltaste ningún bloque esa semana',
+      'Condición mínima: completar Rutina A (lunes y viernes) + Rutina B (miércoles) en la misma semana',
+      'Marca el domingo de la semana 8'
+    ],
+    xp:800,stat:'dis',statv:6
+  },
+  {
+    id:'boss7',
+    name:'Trote Continuo 20 Minutos',
+    sub:'Corre 20 minutos sin parar en una sola sesión del sábado',
+    crit:[
+      'Ritmo conversacional: puedes hablar con dificultad pero sin parar',
+      'Si tienes que caminar, no cuenta — descansa y retoma el siguiente sábado',
+      'Referencia: semanas 9-10 del protocolo de trote',
+      'Usa el timer de la app o tu reloj para medir',
+      'Marca inmediatamente al terminar los 20 min ese sábado'
+    ],
+    xp:700,stat:'end',statv:6
+  },
+  {
+    id:'boss8',
+    name:'12 Semanas Completadas',
+    sub:'Terminaste el plan completo de recomposición corporal',
+    crit:[
+      'Completaste al menos 10 de las 12 semanas sin semanas completamente vacías',
+      'Tienes al menos una medida registrada al inicio y una al final',
+      'Hiciste al menos una sesión de trote continuo de 20+ minutos',
+      'Completaste al menos un HIIT-JR de 10 rondas',
+      'Marca este boss el día 84 (o después) del plan — es tu victoria final'
+    ],
+    xp:2000,stat:'dis',statv:10
+  }
+];
+
+const MEALS = [
+  {id:'m1',name:'Desayuno',icon:'☀️',time:'07:00-08:00',options:[
+    'Huevos revueltos (3) + pan integral (2) + fruta + yogur natural',
+    'Avena con leche descremada + huevos cocidos (2) + fruta',
+    'Batido de leche + banana + maní + huevos (2)'
+  ],prot:31,carb:45,fat:14,kcal:430},
+  {id:'m2',name:'Media mañana',icon:'🥜',time:'10:30-11:00',options:[
+    'Maní sin sal (~30g) + manzana o pera',
+    'Yogur natural sin azúcar + mandarina',
+    '2 huevos duros + fruta'
+  ],prot:9,carb:20,fat:10,kcal:200},
+  {id:'m3',name:'Almuerzo',icon:'🍽️',time:'12:30-14:00',options:[
+    'Pollo/res a la plancha (180g) + ¾ taza arroz + ½ taza menestra + ensalada doble',
+    'Seco de pollo (pide sin exceso de aceite) + arroz reducido + ensalada',
+    'Pescado asado + menestra + ensalada — evitar frito'
+  ],prot:50,carb:65,fat:12,kcal:580},
+  {id:'m4',name:'Merienda',icon:'🥚',time:'16:00-17:00',options:[
+    'Atún en agua (1 lata) + pan integral (1 rebanada) — MEJOR OPCION',
+    'Yogur natural sin azúcar + maní (~25g)',
+    '2 huevos duros + fruta (manzana o pera)',
+    'Queso fresco (50g) + manzana'
+  ],prot:22,carb:18,fat:6,kcal:210},
+  {id:'m5',name:'Cena',icon:'🌙',time:'20:00-21:00',options:[
+    'Atún/sardinas en agua + ensalada fresca grande — MEJOR OPCION',
+    'Huevos revueltos (3) + pan integral (1)',
+    'Quinoa (½ taza cocida) + 2 huevos + aguacate',
+    'Sopa de lentejas casera'
+  ],prot:26,carb:22,fat:8,kcal:260}
+];
+
+const WEEK_ACTIVITY_PREFS = [
+  {key:'sun',label:'DOM',type:'descanso'},
+  {key:'mon',label:'LUN',type:'Rutina A'},
+  {key:'tue',label:'MAR',type:'HIIT-JR'},
+  {key:'wed',label:'MIE',type:'Rutina B'},
+  {key:'thu',label:'JUE',type:'MICT-JR'},
+  {key:'fri',label:'VIE',type:'Rutina A'},
+  {key:'sat',label:'SAB',type:'Trote'}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+function loadState(){try{return JSON.parse(localStorage.getItem('sl_v3')||'{}')}catch(e){return{}}}
+function saveState(){localStorage.setItem('sl_v3',JSON.stringify(S))}
+
+let S = loadState();
+if(!S.xp)S.xp=0;
+if(!S.level)S.level=1;
+if(!S.stats)S.stats={str:1,agi:1,end:1,dis:1};
+if(!S.exDone)S.exDone={};
+if(!S.ddDone)S.ddDone={};
+if(!S.foodDone)S.foodDone={};
+if(!S.bossDone)S.bossDone={};
+if(!S.activity)S.activity={};
+if(!S.totalEx)S.totalEx=0;
+if(!S.streak)S.streak=0;
+if(!S.lastDate)S.lastDate='';
+if(!S.weekStart)S.weekStart=1;
+if(!S.medidas)S.medidas=[];
+if(!S.customMeals)S.customMeals=[];
+if(!S.customDone)S.customDone={};
+if(S.soundOn===undefined)S.soundOn=false;
+if(!S.pc)S.pc=0;
+if(!S.pcTotal)S.pcTotal=0;
+if(!S.pcSpent)S.pcSpent=0;
+if(!S.customRewards)S.customRewards=[];
+if(!S.redeemHistory)S.redeemHistory=[];
+if(!S.pcEarnedToday)S.pcEarnedToday=0;
+if(!S.shopCosts)S.shopCosts={};
+
+const todayKey=new Date().toISOString().slice(0,10);
+if(S.lastDate!==todayKey){
+  const hadAct=Object.keys(S.exDone).length>0||Object.keys(S.ddDone).length>0;
+  if(hadAct){
+    S.activity[S.lastDate]=true;
+    const yest=new Date();yest.setDate(yest.getDate()-1);
+    if(S.lastDate===yest.toISOString().slice(0,10))S.streak=(S.streak||0)+1;
+    else S.streak=0;
+  }
+  S.exDone={};S.ddDone={};S.foodDone={};S.customDone={};S.pcEarnedToday=0;S._dailyModalShown=false;
+  S.lastDate=todayKey;
+  saveState();
+  // Check streak milestones after day transition
+  _checkStreak();
+  saveState();
+}
+
+// ============================================================
+// LEVEL SYSTEM
+// ============================================================
+function calcLevel(xp){
+  let lv=1,thr=1000,rem=xp;
+  while(rem>=thr){rem-=thr;lv++;thr=Math.floor(thr*1.3)}
+  return{lv,rem,thr};
+}
+function getRank(lv){
+  if(lv>=50)return'S';if(lv>=30)return'A';if(lv>=20)return'B';
+  if(lv>=10)return'C';if(lv>=5)return'D';return'E';
+}
+function getCurrentWeek(){
+  if(!S.planStartDate) return 1;
+  const start=new Date(S.planStartDate+'T00:00:00');
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const diffDays=Math.floor((today-start)/(24*3600*1000));
+  if(diffDays<0) return 1;
+  return Math.max(1,Math.min(12,Math.floor(diffDays/7)+1));
+}
+
+function confirmStartDate(){
+  const input=document.getElementById('date-picker');
+  if(!input||!input.value){showNotify('Selecciona una fecha primero');return;}
+  S.planStartDate=input.value;
+  saveState();
+  renderWeekCal();renderToday();
+  const w=getCurrentWeek();
+  showNotify('Semana '+w+' activada ✓','green');
+  sfxCheck();
+}
+function getPhaseInfo(w){
+  if(w<=4)return{num:'01',name:'FASE FUNDACION (Semanas 1-4)',desc:'Técnica correcta. 2-3 series por ejercicio. Cuerda suave. HIIT sem 1-2: 30s/30s ×7. MICT: 8 min continuo. Déficit calórico moderado desde el inicio. Prioriza consistencia sobre intensidad.',color:'var(--gold)'};
+  if(w<=8)return{num:'02',name:'FASE DESARROLLO (Semanas 5-8)',desc:'3-4 series. Variaciones más exigentes. ≥10 series/músculo/semana. HIIT: 1min/1min ×9-10. MICT: 11 min. Proteína >1.6g/kg/día. Sentadilla búlgara. Single-leg hip thrust.',color:'var(--cyan)'};
+  return{num:'03',name:'FASE CONSOLIDACION (Semanas 9-12)',desc:'8-12 reps al límite técnico. HIIT: 1min/1min ×11. MICT: 13-15 min. Trote continuo 25-30 min. Variantes avanzadas. Evaluar composición corporal al final.',color:'var(--green)'};
+}
+
+// ============================================================
+// UI UPDATE
+// ============================================================
+function updateUI(){
+  const{lv,rem,thr}=calcLevel(S.xp);
+  S.level=lv;
+  const rank=getRank(lv);
+  const pct=Math.round((rem/thr)*100);
+  document.getElementById('lvl-badge').textContent='NIVEL '+lv;
+  document.getElementById('xp-info').textContent=rem+' / '+thr+' XP';
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-pct').textContent=pct+'%';
+  document.getElementById('rank-disp').textContent='RANGO: '+rank;
+  ['str','agi','end','dis'].forEach(k=>{
+    const v=S.stats[k]||1;
+    document.getElementById('sv-'+k).textContent=v;
+    document.getElementById('sb-'+k).style.width=Math.min(100,(v/100)*100)+'%';
+  });
+  document.getElementById('pg-total').textContent=S.totalEx;
+  document.getElementById('pg-streak').textContent=S.streak;
+  document.getElementById('pg-xp').textContent=S.xp;
+  document.getElementById('pg-level').textContent=lv;
+  updateMacros();
+  renderActivityGrid();
+  renderWeekCal();
+  updatePCDisplay();
+}
+
+// ============================================================
+// RENDER TODAY TAB
+// ============================================================
+// ============================================================
+// DAY PREVIEW — allows browsing any day of the week
+// ============================================================
+let previewDow = null; // null = use real today
+
+function toggleDaySelector(){
+  const sel = document.getElementById('day-selector');
+  const isOpen = sel.style.display !== 'none';
+  if(isOpen){ closeDayPreview(); return; }
+  sel.style.display = 'block';
+  openTab('hoy'); // make sure HOY tab is active
+  renderDaySelGrid();
+  document.getElementById('day-sel-btn').style.color='var(--accent)';
+}
+
+function renderDaySelGrid(){
+  const realDow = new Date().getDay();
+  const activeDow = previewDow !== null ? previewDow : realDow;
+  const labels = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
+  document.getElementById('day-sel-grid').innerHTML = DAY_PLAN.map((d,i)=>`
+    <div onclick="selectPreviewDay(${i})" style="
+      padding:6px 2px;text-align:center;cursor:pointer;transition:all .2s;
+      background:${i===activeDow?'rgba(77,143,255,.15)':'transparent'};
+      border:1px solid ${i===activeDow?'var(--accent)':i===realDow?'rgba(77,143,255,.2)':'var(--border)'};
+    ">
+      <div style="font:400 7px/1 var(--mono);color:${i===activeDow?'var(--accent)':'var(--muted)'};margin-bottom:3px">${labels[i]}</div>
+      <div style="font-size:14px">${d.icon}</div>
+      <div style="font:700 6px/1 var(--mono);color:${i===activeDow?'var(--accent)':'var(--muted)'};margin-top:2px;letter-spacing:.5px">${d.badge.split(' ')[0]}</div>
+    </div>`).join('');
+}
+
+function selectPreviewDay(dow){
+  const realDow = new Date().getDay();
+  previewDow = (dow === realDow) ? null : dow;
+  renderDaySelGrid();
+  renderToday();
+  const btn = document.getElementById('day-sel-btn');
+  if(previewDow !== null){
+    btn.style.color = 'var(--gold)';
+    btn.title = 'Viendo: '+['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow];
+  } else {
+    btn.style.color = 'var(--accent)';
+    btn.title = 'Ver otro día';
+  }
+}
+
+function closeDayPreview(){
+  previewDow = null;
+  document.getElementById('day-selector').style.display = 'none';
+  document.getElementById('day-sel-btn').style.color = 'var(--muted)';
+  renderToday();
+}
+
+function renderToday(){
+  const realDow = new Date().getDay();
+  const dow = previewDow !== null ? previewDow : realDow;
+  const isPreview = previewDow !== null && previewDow !== realDow;
+  const plan=DAY_PLAN[dow];
+  const html=[];
+  if(isPreview){
+    const labels=["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+    html.push(`<div style="margin:0 16px 10px;padding:7px 12px;background:rgba(240,180,41,.06);border:1px solid rgba(240,180,41,.25);font:400 9px/1.5 var(--mono);color:var(--gold);letter-spacing:1px">VISTA PREVIA — ${labels[dow].toUpperCase()} · Solo lectura</div>`);
+  }
+  html.push(`<div class="day-hdr"><div class="day-name">${DAYS[dow].toUpperCase()}</div><div class="day-type-badge ${plan.bclass}">${plan.badge}</div></div>`);
+
+  if(plan.type==='descanso'){
+    html.push('<div class="slbl">DIA DE DESCANSO</div>');
+    html.push('<div class="mlist"><div class="mi" style="cursor:default"><div class="mi-info"><div class="mi-name">Descanso activo — caminar o movilidad ligera</div><div class="mi-sub">El descanso es parte del plan. La GH repara músculo mientras duermes.</div></div></div></div>');
+    renderDiscipline(html);
+  } else if(plan.type==='fuerza'){
+    const rutina=dow===3?RUTINA_B:RUTINA_A;
+    const rutinaLabel=dow===3?'RUTINA B — ESPALDA, BICEPS, AGARRE':'RUTINA A — PECHO, HOMBROS, TRICEPS, PIERNAS';
+    html.push(`<div class="slbl">${rutinaLabel}</div>`);
+    rutina.forEach(block=>{
+      html.push(`<div class="ex-block"><div class="ex-block-hdr"><div class="ex-block-title">${block.title}</div><div class="ex-block-tag ${block.tagcls}">${block.tag}</div></div>`);
+      block.exercises.forEach(ex=>{
+        const done=!!S.exDone[ex.id];
+        const clickHandler=isPreview?'':'onclick="toggleEx(\''+ex.id+'\',\''+block.id+'\',\''+( block.stat||'')+'\','+( block.xp||0)+')"';
+        html.push(`<div class="ex-row${done?' done':''}" ${clickHandler} style="${isPreview?'cursor:default;':''}">
+          <div class="excheck">${done?'✓':''}</div>
+          <div class="ex-info"><div class="ex-name">${ex.name}</div>${ex.note?`<div class="ex-note">${ex.note}</div>`:''}</div>
+          <div class="ex-reps">${ex.reps}</div>
+        </div>`);
+      });
+      html.push('</div>');
+    });
+    renderDiscipline(html);
+  } else if(plan.type==='hiit'||plan.type==='mict'){
+    const isHiit=plan.type==='hiit';
+    const w=getCurrentWeek();
+    let protocol,tiempo;
+    if(w<=2){protocol=isHiit?'30s salto / 30s descanso × 7 rondas':'8 min continuo';tiempo=isHiit?420:480}
+    else if(w<=4){protocol=isHiit?'45s salto / 45s descanso × 8 rondas':'10 min continuo';tiempo=isHiit?720:600}
+    else if(w<=8){protocol=isHiit?'1 min salto / 1 min descanso × 9-10 rondas':'11 min continuo';tiempo=isHiit?1200:660}
+    else{protocol=isHiit?'1 min salto / 1 min descanso × 11 rondas':'13-15 min continuo';tiempo=isHiit?1320:840}
+
+    html.push(`<div class="slbl">${isHiit?'HIIT-JR — CUERDA DE SALTO INTERVALOS':'MICT-JR — CUERDA DE SALTO CONTINUO'}</div>`);
+    html.push(`<div class="rope-box">
+      <div style="font:400 10px/1 var(--mono);color:var(--muted);margin-bottom:8px">SEMANA ${w} — ${protocol}</div>
+      <div class="rope-timer">
+        <div class="rope-time-display" id="rope-time">${formatTime(tiempo)}</div>
+        <div class="rope-phase" id="rope-phase">${isHiit?'LISTO PARA HIIT':'LISTO PARA MICT'}</div>
+        <div class="rope-rounds" id="rope-rounds">${isHiit?'RONDAS: 0':'TIEMPO: 0:00'}</div>
+      </div>
+      <div class="rope-btns">
+        <button class="rbtn start" onclick="startRope(${isHiit?1:0},${tiempo})">INICIAR</button>
+        <button class="rbtn stop" onclick="stopRope()">DETENER</button>
+      </div>
+      <div style="font:400 10px/1.5 var(--mono);color:var(--muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+        0-5 min: Calentamiento (caminata + rotaciones)<br>
+        5-25 min: Protocolo de cuerda<br>
+        25-35 min: Core + plancha (2x30s) + bird-dog (2x8) + chin tuck (2x10)
+      </div>
+    </div>`);
+    const mids=[
+      {id:'rope-done',name:isHiit?'HIIT-JR completado':'MICT-JR completado',sub:protocol,xp:isHiit?200:180,stat:isHiit?'agi':'end',statv:2},
+      {id:'rope-core',name:'Core post-cuerda completado',sub:'Plancha + bird-dog + chin tuck',xp:50,stat:'dis',statv:1},
+      {id:'rope-calor',name:'Calentamiento completado',sub:'5 min caminata + rotaciones',xp:20,stat:'end',statv:0}
+    ];
+    html.push('<div class="slbl">MISIONES DE HOY</div><div class="mlist">');
+    mids.forEach(m=>{
+      const done=!!S.exDone[m.id];
+      html.push(`<div class="mi${done?' done':''}" onclick="toggleMission('${m.id}',${m.xp},'${m.stat}',${m.statv})">
+        <div class="mcheck">${done?'✓':''}</div>
+        <div class="mi-info"><div class="mi-name">${m.name}</div><div class="mi-sub">${m.sub}</div></div>
+        <div class="mi-xp ${m.stat}">+${m.xp} XP</div>
+      </div>`);
+    });
+    html.push('</div>');
+    renderDiscipline(html);
+  } else if(plan.type==='trote'){
+    const w=getCurrentWeek();
+    let prot;
+    if(w<=2)prot='2 min trote + 3 min caminata × 4 (~22 min)';
+    else if(w<=4)prot='3 min trote + 2 min caminata × 4-5 (~25 min)';
+    else if(w<=6)prot='5 min trote + 2 min caminata × 4 (~28 min)';
+    else if(w<=8)prot='8 min trote + 2 min caminata × 3 (~30 min)';
+    else if(w<=10)prot='12 min trote + 2 min caminata × 2 (~28 min)';
+    else prot='Trote continuo 25-30 min — META FINAL';
+    html.push('<div class="slbl">PROTOCOLO DE TROTE — SABADOS</div>');
+    const tmids=[
+      {id:'trote-done',name:'Sesión de trote completada',sub:`Semana ${w}: ${prot}`,xp:200,stat:'end',statv:3},
+      {id:'trote-estirar',name:'Estiramiento post-trote',sub:'Hip flexors + gemelos + cuádriceps (10 min)',xp:40,stat:'dis',statv:0}
+    ];
+    html.push('<div class="mlist">');
+    tmids.forEach(m=>{
+      const done=!!S.exDone[m.id];
+      html.push(`<div class="mi${done?' done':''}" onclick="toggleMission('${m.id}',${m.xp},'${m.stat}',${m.statv})">
+        <div class="mcheck">${done?'✓':''}</div>
+        <div class="mi-info"><div class="mi-name">${m.name}</div><div class="mi-sub">${m.sub}</div></div>
+        <div class="mi-xp ${m.stat}">+${m.xp} XP</div>
+      </div>`);
+    });
+    html.push('</div>');
+    renderDiscipline(html);
+  }
+
+  document.getElementById('tab-hoy').innerHTML=html.join('');
+}
+
+function renderDiscipline(html){
+  html.push('<div class="slbl">MISIONES DE DISCIPLINA DIARIA</div><div class="mlist">');
+  DAILY_DISCIPLINE.forEach(m=>{
+    const done=!!S.ddDone[m.id];
+    html.push(`<div class="mi${done?' done':''}" onclick="toggleDD('${m.id}',${m.xp},'${m.stat}')">
+      <div class="mcheck">${done?'✓':''}</div>
+      <div class="mi-info"><div class="mi-name">${m.name}</div><div class="mi-sub">${m.sub}</div></div>
+      <div class="mi-xp ${m.stat}">+${m.xp} XP</div>
+    </div>`);
+  });
+  html.push('</div>');
+}
+
+// ============================================================
+// RENDER SEMANA TAB
+// ============================================================
+function renderWeekCal(){
+  const dow=new Date().getDay();
+  const cal=document.getElementById('week-cal');
+  if(!cal)return;
+  cal.innerHTML=DAY_PLAN.map((d,i)=>`
+    <div class="wday${i===dow?' active-day today':''}${S.activity[todayKey]&&i===dow?' done-day':''}">
+      <div class="wday-name">${['DOM','LUN','MAR','MIE','JUE','VIE','SAB'][i]}</div>
+      <div class="wday-icon">${d.icon}</div>
+      <div class="wday-type">${d.badge}</div>
+    </div>`).join('');
+
+  const w=getCurrentWeek();
+  const ph=getPhaseInfo(w);
+  const pi=document.getElementById('phase-info');
+  if(pi){
+    if(!S.planStartDate){
+      pi.innerHTML=`<strong style="color:var(--gold)">CONFIGURA TU FECHA DE INICIO</strong>Presiona el botón "CONFIGURAR" arriba e ingresa la fecha en que empezaste (o vas a empezar) el plan. El sistema calculará automáticamente en qué semana estás.`;
+    } else {
+      pi.innerHTML=`<strong>SEMANA ${w} — ${ph.name}</strong>${ph.desc}`;
+    }
+  }
+  const sd=document.getElementById('start-date-display');
+  if(sd){sd.textContent=S.planStartDate?'Inicio: '+S.planStartDate+' — Semana '+w+' de 12':'No configurada — selecciona la fecha en que empezaste el plan.';}
+  const dp=document.getElementById('date-picker');
+  if(dp&&S.planStartDate)dp.value=S.planStartDate;
+
+  const bl=document.getElementById('boss-list');
+  if(bl){
+    bl.innerHTML=BOSS_MISSIONS.map(m=>{
+      const done=!!S.bossDone[m.id];
+      const critHtml=m.crit?m.crit.map(c=>`<div style="display:flex;gap:6px;padding:3px 0;border-bottom:1px solid rgba(26,42,74,.4)"><span style="color:var(--gold);flex-shrink:0">▸</span><span>${c}</span></div>`).join(''):'';
+      return`<div style="background:var(--card);border:1px solid ${done?'rgba(45,206,137,.3)':'rgba(240,180,41,.2)'};margin:0 16px 6px;overflow:hidden">
+        <div class="mi boss${done?' done':''}" onclick="toggleBoss('${m.id}')" style="margin:0;border:none">
+          <div class="boss-tag">BOSS</div>
+          <div class="mcheck">${done?'✓':''}</div>
+          <div class="mi-info"><div class="mi-name">${m.name}</div><div class="mi-sub">${m.sub}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <div class="mi-xp gold">+${m.xp} XP</div>
+            <div onclick="event.stopPropagation();toggleBossCrit('crit-${m.id}')" style="font:700 8px/1 var(--mono);color:var(--muted);cursor:pointer;padding:2px 6px;border:1px solid var(--border)">VER ▾</div>
+          </div>
+        </div>
+        <div id="crit-${m.id}" style="display:none;padding:8px 12px;border-top:1px solid rgba(240,180,41,.15);background:rgba(240,180,41,.03)">
+          <div style="font:700 8px/1 var(--mono);color:var(--gold);letter-spacing:2px;margin-bottom:6px">CONDICIONES DE VICTORIA</div>
+          <div style="font:400 10px/1.6 var(--mono);color:var(--muted)">${critHtml}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// CONFIRM MODAL (replaces browser confirm())
+// ============================================================
+let _confirmCb=null;
+function showConfirm(msg, sub, onOK, okLabel, okColor){
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-sub').textContent=sub||'';
+  const btn=document.getElementById('confirm-ok-btn');
+  btn.textContent=okLabel||'CONFIRMAR';
+  btn.style.color=okColor||'var(--green)';
+  btn.style.borderColor=okColor?okColor.replace('var(--','rgba(').replace(')',',.35)'):'rgba(45,206,137,.35)';
+  btn.style.background=okColor?okColor.replace('var(--','rgba(').replace(')',', .1)'):'rgba(45,206,137,.1)';
+  _confirmCb=onOK;
+  document.getElementById('confirm-overlay').classList.add('active');
+}
+function confirmOK(){
+  document.getElementById('confirm-overlay').classList.remove('active');
+  if(_confirmCb){const cb=_confirmCb;_confirmCb=null;cb();}
+}
+function confirmCancel(){
+  document.getElementById('confirm-overlay').classList.remove('active');
+  _confirmCb=null;
+}
+
+// ============================================================
+// MEDIDAS MODAL (replaces prompt())
+// ============================================================
+function addMedida(){
+  document.getElementById('med-cintura').value='';
+  document.getElementById('med-cadera').value='';
+  document.getElementById('med-muslo').value='';
+  document.getElementById('medidas-overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('med-cintura').focus(),300);
+}
+function medidasSave(){
+  const cintura=document.getElementById('med-cintura').value.trim();
+  const cadera=document.getElementById('med-cadera').value.trim();
+  const muslo=document.getElementById('med-muslo').value.trim();
+  if(!cintura&&!cadera&&!muslo){showNotify('Ingresa al menos una medida');return;}
+  S.medidas.push({fecha:todayKey,cintura:cintura||'—',cadera:cadera||'—',muslo:muslo||'—'});
+  saveState();
+  document.getElementById('medidas-overlay').classList.remove('active');
+  renderActivityGrid();
+  showNotify('Medidas guardadas ✓','green');sfxCheck();
+}
+function medidasCancel(){
+  document.getElementById('medidas-overlay').classList.remove('active');
+}
+
+
+let modalQueue=[];
+let modalOpen=false;
+
+function showModal(cfg){
+  modalQueue.push(cfg);
+  if(!modalOpen)_nextModal();
+}
+
+function _nextModal(){
+  if(!modalQueue.length){modalOpen=false;return;}
+  modalOpen=true;
+  const cfg=modalQueue.shift();
+  const ov=document.getElementById('modal-overlay');
+  const box=document.getElementById('modal-box');
+
+  // Apply theme colors
+  const c=cfg.color||'var(--accent)';
+  document.getElementById('modal-line-top').style.background=c;
+  box.style.borderColor=cfg.borderColor||'rgba(77,143,255,.4)';
+  document.getElementById('modal-icon').textContent=cfg.icon||'⚡';
+  document.getElementById('modal-sys').style.color=c;
+  document.getElementById('modal-sys').textContent=cfg.sys||'[ SISTEMA ]';
+  document.getElementById('modal-title').textContent=cfg.title||'';
+  document.getElementById('modal-title').style.color=cfg.titleColor||'#fff';
+  document.getElementById('modal-subtitle').textContent=cfg.subtitle||'';
+  document.getElementById('modal-subtitle').style.color=c;
+  document.getElementById('modal-body').textContent=cfg.body||'';
+  const cl=document.getElementById('modal-close');
+  cl.style.background=cfg.btnBg||'rgba(77,143,255,.15)';
+  cl.style.color=c;
+  cl.style.border='1px solid '+c;
+
+  // Stats pills
+  const ms=document.getElementById('modal-stats');
+  ms.innerHTML=(cfg.stats||[]).map(s=>`
+    <div class="modal-stat" style="border-color:${s.color||c};background:${s.bg||'rgba(77,143,255,.08)'}">
+      <div class="modal-stat-val" style="color:${s.color||c}">${s.val}</div>
+      <div class="modal-stat-lbl" style="color:${s.color||c}">${s.lbl}</div>
+    </div>`).join('');
+
+  // Particles
+  _spawnParticles(cfg.particleColor||c, cfg.particleCount||18);
+
+  // Show
+  ov.classList.add('active');
+
+  // Auto-close if cfg.autoClose
+  if(cfg.autoClose){
+    setTimeout(closeModal, cfg.autoClose);
+  }
+}
+
+function closeModal(){
+  const ov=document.getElementById('modal-overlay');
+  ov.classList.remove('active');
+  // Clear particles after transition
+  setTimeout(()=>{
+    document.getElementById('modal-particles').innerHTML='';
+    if(modalQueue.length){
+      setTimeout(_nextModal, 200);
+    } else {
+      modalOpen=false;
+    }
+  },350);
+}
+
+function _spawnParticles(color, count){
+  const container=document.getElementById('modal-particles');
+  container.innerHTML='';
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div');
+    const size=Math.random()*3+1;
+    const x=Math.random()*100;
+    const y=Math.random()*100;
+    const dur=Math.random()*2+1.5;
+    const delay=Math.random()*1.5;
+    const drift=(Math.random()-0.5)*60;
+    p.style.cssText=`
+      position:absolute;width:${size}px;height:${size}px;
+      background:${color};border-radius:50%;
+      left:${x}%;top:${y}%;opacity:0;
+      animation:particle-rise ${dur}s ${delay}s ease-out forwards;
+      --drift:${drift}px;
+    `;
+    container.appendChild(p);
+  }
+  // Inject keyframes once
+  if(!document.getElementById('particle-kf')){
+    const style=document.createElement('style');
+    style.id='particle-kf';
+    style.textContent=`
+      @keyframes particle-rise{
+        0%{opacity:0;transform:translateY(0) translateX(0);}
+        20%{opacity:.9;}
+        100%{opacity:0;transform:translateY(-80px) translateX(var(--drift));}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+// ---- MODAL PRESETS ----
+
+function modalLevelUp(newLevel, rank, stats){
+  const rankColors={E:'#4d8fff',D:'#2dce89',C:'#f0b429',B:'#fb923c',A:'#f5365c',S:'#a855f7'};
+  const rc=rankColors[rank]||'#4d8fff';
+  sfxLevelUp();
+  showModal({
+    icon:'🆙',
+    color:rc,
+    borderColor:rc,
+    sys:'[ SISTEMA ] ALERTA DE NIVEL',
+    title:'NIVEL '+newLevel,
+    titleColor:rc,
+    subtitle:'RANGO '+rank+' ALCANZADO',
+    body:'El sistema ha reconocido tu crecimiento.\nContinúa tu camino, Cazador.',
+    stats:[
+      {val:'💪 '+stats.str, lbl:'FUERZA',   color:'#f5365c', bg:'rgba(245,54,92,.08)'},
+      {val:'⚡ '+stats.agi, lbl:'AGILIDAD', color:'#00c9ff', bg:'rgba(0,201,255,.08)'},
+      {val:'❤ '+stats.end,  lbl:'RESISTENCIA',color:'#2dce89',bg:'rgba(45,206,137,.08)'},
+      {val:'🧠 '+stats.dis, lbl:'DISCIPLINA',color:'#a855f7',bg:'rgba(168,85,247,.08)'},
+    ],
+    btnBg:'rgba(168,85,247,.15)',
+    particleColor:rc,
+    particleCount:30,
+  });
+}
+
+function modalBossDefeated(missionName, xp, pc, crit){
+  sfxBoss();
+  const critLine=crit&&crit.length?crit[crit.length-1]:'El sistema registra tu hazaña.';
+  showModal({
+    icon:'💀',
+    color:'#f0b429',
+    borderColor:'rgba(240,180,41,.5)',
+    sys:'[ SISTEMA ] MISIÓN PRINCIPAL COMPLETADA',
+    title:'BOSS DERROTADO',
+    titleColor:'#f0b429',
+    subtitle:missionName.toUpperCase(),
+    body:critLine,
+    stats:[
+      {val:'+'+xp+' XP', lbl:'EXPERIENCIA',    color:'#f0b429', bg:'rgba(240,180,41,.08)'},
+      {val:'+'+pc+' PC', lbl:'PUNTOS CAZADOR',  color:'#2dce89', bg:'rgba(45,206,137,.08)'},
+    ],
+    btnBg:'rgba(240,180,41,.15)',
+    particleColor:'#f0b429',
+    particleCount:35,
+  });
+}
+
+function modalBlockDone(blockName, xp, pc){
+  sfxBlock();
+  showModal({
+    icon:'💪',
+    color:'#4d8fff',
+    borderColor:'rgba(77,143,255,.4)',
+    sys:'[ SISTEMA ] BLOQUE COMPLETADO',
+    title:'BLOQUE SUPERADO',
+    titleColor:'#fff',
+    subtitle:blockName.toUpperCase(),
+    body:'Todos los ejercicios del bloque completados.\nTus músculos reciben la señal de adaptación.',
+    stats:[
+      {val:'+'+xp+' XP', lbl:'EXPERIENCIA', color:'#4d8fff', bg:'rgba(77,143,255,.08)'},
+      {val:'+'+pc+' PC',  lbl:'PUNTOS CAZADOR', color:'#f0b429', bg:'rgba(240,180,41,.08)'},
+    ],
+    btnBg:'rgba(77,143,255,.15)',
+    particleColor:'#4d8fff',
+    particleCount:20,
+  });
+}
+
+function modalRedeemed(icon, name, cost){
+  sfxBoss();
+  showModal({
+    icon:icon,
+    color:'#2dce89',
+    borderColor:'rgba(45,206,137,.4)',
+    sys:'[ SISTEMA ] RECOMPENSA CANJEADA',
+    title:'¡TE LO GANASTE!',
+    titleColor:'#2dce89',
+    subtitle:name.toUpperCase(),
+    body:'El sistema autoriza esta recompensa.\nDisfrútala sin culpa — es parte del plan.',
+    stats:[
+      {val:'-'+cost+' PC', lbl:'PUNTOS GASTADOS', color:'#f5365c', bg:'rgba(245,54,92,.08)'},
+      {val:S.pc+' PC',     lbl:'SALDO RESTANTE',  color:'#2dce89', bg:'rgba(45,206,137,.08)'},
+    ],
+    btnBg:'rgba(45,206,137,.15)',
+    particleColor:'#2dce89',
+    particleCount:25,
+  });
+}
+
+function modalStreak(days){
+  const icons={3:'🔥',7:'⚡',14:'💎',30:'👑'};
+  const colors={3:'#fb923c',7:'#f0b429',14:'#00c9ff',30:'#a855f7'};
+  const titles={3:'¡3 DÍAS SEGUIDOS!',7:'¡UNA SEMANA COMPLETA!',14:'¡DOS SEMANAS IMPARABLE!',30:'¡UN MES LEGENDARIO!'};
+  const bodies={
+    3:'Tres días de consistencia. El hábito empieza a formarse.',
+    7:'Una semana sin fallar. Estás construyendo algo real.',
+    14:'Dos semanas. Tu cuerpo ya está cambiando aunque no lo veas aún.',
+    30:'30 días. Eres oficialmente diferente a quien eras hace un mes.'
+  };
+  const ic=icons[days]||'🔥';
+  const co=colors[days]||'#fb923c';
+  sfxLevelUp();
+  showModal({
+    icon:ic,
+    color:co,
+    borderColor:co,
+    sys:'[ SISTEMA ] RACHA DE CONSTANCIA',
+    title:titles[days]||days+' DÍAS',
+    titleColor:co,
+    subtitle:'RACHA ACTIVA: '+days+' DÍAS CONSECUTIVOS',
+    body:bodies[days]||'Sigue así, Cazador.',
+    stats:[
+      {val:days+'🔥', lbl:'DÍAS RACHA', color:co, bg:'rgba(251,146,60,.08)'},
+      {val:S.streak, lbl:'RACHA TOTAL', color:'#f0b429', bg:'rgba(240,180,41,.08)'},
+    ],
+    btnBg:'rgba(251,146,60,.15)',
+    particleColor:co,
+    particleCount:28,
+  });
+}
+
+function modalDailyDone(){
+  sfxLevelUp();
+  showModal({
+    icon:'🌟',
+    color:'#f0b429',
+    borderColor:'rgba(240,180,41,.45)',
+    sys:'[ SISTEMA ] DÍA COMPLETADO',
+    title:'MISIONES DIARIAS',
+    titleColor:'#f0b429',
+    subtitle:'TODAS COMPLETADAS',
+    body:'Has cumplido todas tus misiones del día.\nEl sistema registra tu disciplina, Cazador.',
+    stats:[
+      {val:S.pcEarnedToday||0+' PC', lbl:'PC GANADOS HOY', color:'#f0b429', bg:'rgba(240,180,41,.08)'},
+      {val:S.streak+'🔥',            lbl:'DÍAS RACHA',     color:'#fb923c', bg:'rgba(251,146,60,.08)'},
+    ],
+    btnBg:'rgba(240,180,41,.15)',
+    particleColor:'#f0b429',
+    particleCount:32,
+  });
+}
+
+
+// ============================================================
+// SOUND ENGINE — Atmospheric Dark RPG (sutil)
+// ============================================================
+let audioCtx=null;
+function getCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  return audioCtx;
+}
+
+function _tone(freq,type,vol,attack,release,delay,detune){
+  if(!S.soundOn)return;
+  try{
+    const ctx=getCtx();const t=ctx.currentTime+(delay||0);
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type||'sine';
+    o.frequency.value=freq;
+    if(detune)o.detune.value=detune;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+(attack||.01));
+    g.gain.exponentialRampToValueAtTime(0.0001,t+(attack||.01)+(release||.3));
+    o.start(t);
+    o.stop(t+(attack||.01)+(release||.3)+.05);
+  }catch(e){}
+}
+
+// ── CHECK: dos sine suaves — sistema que reconoce
+function sfxCheck(){
+  _tone(320,'sine',.04,.005,.25,0);
+  _tone(480,'sine',.025,.005,.2,.04);
+}
+
+// ── UNCHECK: tono único descendente muy suave
+function sfxUncheck(){
+  _tone(220,'sine',.035,.003,.3,0);
+}
+
+// ── BLOCK DONE: acorde menor de 3 notas, bajo volumen, larga cola
+function sfxBlock(){
+  _tone(110,'sine',.06,.01,.8,0);       // raíz grave
+  _tone(130,'sine',.04,.01,.7,.05);     // segunda menor — tensión
+  _tone(165,'sine',.035,.01,.6,.1);     // quinta — cierre
+  _tone(660,'sine',.015,.01,.5,.08);    // armónico lejano
+}
+
+// ── BOSS: impacto único grave + armónico alto que se desvanece
+function sfxBoss(){
+  _tone(55,'sine',.12,.005,1.2,0);      // sub grave
+  _tone(82,'sine',.08,.005,1.0,.03);    // quinta baja
+  _tone(110,'sawtooth',.05,.01,.8,.06); // cuerpo del acorde
+  _tone(220,'sine',.03,.01,.9,.08);     // octava, suave
+  _tone(880,'sine',.02,.02,.7,.1);      // shimmer lejano
+}
+
+// ── LEVEL UP: arpeggio lento en menor — cuatro notas que ascienden
+function sfxLevelUp(){
+  const notes=[138,165,207,277];
+  notes.forEach((f,i)=>{
+    _tone(f,'sine',.055,.008,.7,i*.13);
+  });
+  // nota final sostenida
+  _tone(277,'sine',.04,.01,1.2,.55);
+  _tone(554,'sine',.02,.01,.9,.6);
+}
+
+// ── FOOD: un solo tono muy discreto
+function sfxFood(){
+  _tone(440,'sine',.03,.003,.2,0);
+}
+
+// ── BEEP ROPE REST: pulso grave suave
+function sfxBeep(){
+  _tone(130,'sine',.07,.003,.25,0);
+}
+
+// ── BEEP ROPE WORK: tono medio-agudo corto
+function sfxBeepHigh(){
+  _tone(440,'sine',.06,.002,.15,0);
+  _tone(550,'sine',.03,.002,.12,.03);
+}
+
+function toggleSound(){
+  S.soundOn=!S.soundOn;saveState();
+  document.getElementById('sound-dot').className='sound-dot'+(S.soundOn?' on':'');
+  document.getElementById('sound-lbl-state').textContent=S.soundOn?'ON':'OFF';
+  document.getElementById('sound-lbl-state').style.color=S.soundOn?'var(--green)':'var(--muted)';
+  if(S.soundOn){try{getCtx();}catch(e){}sfxCheck();}
+}
+function initSoundUI(){
+  document.getElementById('sound-dot').className='sound-dot'+(S.soundOn?' on':'');
+  document.getElementById('sound-lbl-state').textContent=S.soundOn?'ON':'OFF';
+  document.getElementById('sound-lbl-state').style.color=S.soundOn?'var(--green)':'var(--muted)';
+}
+
+
+
+// ============================================================
+// CUSTOM MEALS
+// ============================================================
+function addCustomMeal(){
+  const name=document.getElementById('cf-name').value.trim();
+  if(!name){showNotify('Escribe el nombre de la comida');return;}
+  const prot=parseInt(document.getElementById('cf-prot').value)||0;
+  const carb=parseInt(document.getElementById('cf-carb').value)||0;
+  const fat=parseInt(document.getElementById('cf-fat').value)||0;
+  const kcal=parseInt(document.getElementById('cf-kcal').value)||0;
+  const id='cm_'+Date.now();
+  S.customMeals.push({id,name,prot,carb,fat,kcal,date:todayKey});
+  document.getElementById('cf-name').value='';
+  document.getElementById('cf-prot').value='';
+  document.getElementById('cf-carb').value='';
+  document.getElementById('cf-fat').value='';
+  document.getElementById('cf-kcal').value='';
+  saveState();renderCustomMeals();updateMacros();
+  showNotify('Comida agregada!','green');sfxFood();
+}
+
+function toggleCustomMeal(id){
+  if(S.customDone[id]){
+    delete S.customDone[id];S.xp=Math.max(0,S.xp-30);
+    S.stats.dis=Math.max(1,(S.stats.dis||1)-1);
+    sfxUncheck();
+  } else {
+    S.customDone[id]=true;S.xp+=30;S.stats.dis=(S.stats.dis||1)+1;
+    showNotify('Comida registrada +30 XP','green');sfxFood();
+  }
+  saveState();renderCustomMeals();updateUI();
+}
+
+function deleteCustomMeal(id){
+  if(S.customDone[id]){S.xp=Math.max(0,S.xp-30);delete S.customDone[id];}
+  S.customMeals=S.customMeals.filter(m=>m.id!==id);
+  saveState();renderCustomMeals();updateMacros();
+  showNotify('Comida eliminada');
+}
+
+function renderCustomMeals(){
+  const el=document.getElementById('custom-meal-list');
+  if(!el)return;
+  const todayMeals=S.customMeals.filter(m=>m.date===todayKey);
+  if(todayMeals.length===0){el.innerHTML='';return;}
+  el.innerHTML='<div class="slbl green" style="margin-top:4px">COMIDAS CUSTOM HOY</div><div class="mlist">'+
+    todayMeals.map(m=>{
+      const done=!!S.customDone[m.id];
+      return`<div class="custom-meal-item${done?' done':''}">
+        <div class="mcheck" onclick="toggleCustomMeal('${m.id}')" style="cursor:pointer">${done?'✓':''}</div>
+        <div class="mi-info" onclick="toggleCustomMeal('${m.id}')" style="cursor:pointer">
+          <div class="mi-name">${m.name}</div>
+          <div class="mi-sub">${m.prot>0?m.prot+'g prot · ':''}${m.carb>0?m.carb+'g carbs · ':''}${m.fat>0?m.fat+'g grasas · ':''}${m.kcal>0?m.kcal+' kcal':''}</div>
+        </div>
+        <button class="del-btn" onclick="deleteCustomMeal('${m.id}')">✕</button>
+      </div>`;
+    }).join('')+'</div>';
+}
+
+
+function renderFood(){
+  const fs=document.getElementById('food-section');
+  if(!fs)return;
+  let html='';
+  MEALS.forEach(meal=>{
+    const done=!!S.foodDone[meal.id];
+    const selOpt=S.foodDone[meal.id+'_opt']||0;
+    html+=`<div class="slbl green">${meal.icon} ${meal.name.toUpperCase()} — ${meal.time}</div>`;
+    html+=`<div class="mlist"><div class="mi food${done?' done':''}" onclick="toggleFood('${meal.id}')">
+      <div class="mcheck">${done?'✓':''}</div>
+      <div class="mi-info">
+        <div class="mi-name">${meal.options[selOpt]}</div>
+        <div class="mi-sub">~${meal.prot}g prot · ~${meal.carb}g carbs · ~${meal.kcal} kcal</div>
+        ${meal.options.length>1?`<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">${meal.options.map((o,i)=>`<span onclick="event.stopPropagation();selectOpt('${meal.id}',${i})" style="font:400 9px/1 var(--mono);padding:2px 6px;border:1px solid ${i===selOpt?'var(--green)':'var(--border)'};color:${i===selOpt?'var(--green)':'var(--muted)'};cursor:pointer;background:${i===selOpt?'rgba(45,206,137,.08)':'transparent'}">OPCION ${String.fromCharCode(65+i)}</span>`).join('')}</div>`:''} 
+      </div>
+      <div class="mi-xp dis">+40 XP</div>
+    </div></div>`;
+  });
+  fs.innerHTML=html;
+}
+
+function updateMacros(){
+  let kcal=0,prot=0,carb=0,fat=0;
+  MEALS.forEach(m=>{if(S.foodDone[m.id]){kcal+=m.kcal;prot+=m.prot;carb+=m.carb;fat+=m.fat}});
+  S.customMeals.filter(m=>m.date===todayKey&&S.customDone[m.id]).forEach(m=>{kcal+=m.kcal;prot+=m.prot;carb+=m.carb;fat+=m.fat});
+  const tk=document.getElementById('t-kcal');const tp=document.getElementById('t-prot');
+  const tc=document.getElementById('t-carb');const tf=document.getElementById('t-fat');
+  if(tk){tk.textContent=kcal;tp.textContent=prot+'g';tc.textContent=carb+'g';tf.textContent=fat+'g'}
+}
+
+function selectOpt(mealId,i){
+  S.foodDone[mealId+'_opt']=i;saveState();renderFood();
+}
+
+// ============================================================
+// ACTIVITY GRID
+// ============================================================
+function renderActivityGrid(){
+  const ag=document.getElementById('activity-grid');
+  if(!ag)return;
+  let html='';
+  for(let i=13;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    const done=S.activity[k]||(i===0&&(Object.keys(S.exDone).length>0||Object.keys(S.ddDone).length>0));
+    const isToday=i===0;
+    html+=`<div style="aspect-ratio:1;background:${done?'rgba(45,206,137,.15)':'rgba(255,255,255,.04)'};border:1px solid ${isToday?'var(--accent)':done?'rgba(45,206,137,.3)':'var(--border)'};display:flex;align-items:center;justify-content:center;font:400 8px/1 var(--mono);color:${done?'var(--green)':isToday?'var(--accent)':'var(--muted)'}">${d.getDate()}</div>`;
+  }
+  ag.innerHTML=html;
+
+  // Medidas
+  const mg=document.getElementById('medidas-grid');
+  if(mg){
+    if(S.medidas.length===0){
+      mg.innerHTML='<div style="grid-column:1/-1;font:400 11px/1.6 var(--mono);color:var(--muted)">No hay medidas registradas aún. Mídete con cinta métrica 1 vez/semana: cintura, cadera y muslos. No uses solo la balanza.</div>';
+    } else {
+      const last=S.medidas[S.medidas.length-1];
+      mg.innerHTML=`
+        <div class="pcard"><div class="pcard-val" style="color:var(--red)">${last.cintura||'—'}cm</div><div class="pcard-lbl">CINTURA</div></div>
+        <div class="pcard"><div class="pcard-val" style="color:var(--purple)">${last.cadera||'—'}cm</div><div class="pcard-lbl">CADERA</div></div>
+        <div class="pcard"><div class="pcard-val" style="color:var(--cyan)">${last.muslo||'—'}cm</div><div class="pcard-lbl">MUSLO</div></div>
+        <div style="grid-column:1/-1;font:400 9px/1 var(--mono);color:var(--muted)">Registrado: ${last.fecha} · ${S.medidas.length} registro(s)</div>`;
+    }
+  }
+}
+
+// ============================================================
+// TOGGLES
+// ============================================================
+function toggleEx(id,blockId,stat,blockXp){
+  const block=([...RUTINA_A,...RUTINA_B]).find(b=>b.id===blockId);
+  if(!block)return;
+  if(S.exDone[id]){
+    delete S.exDone[id];
+    showNotify('Ejercicio desmarcado');sfxUncheck();
+  } else {
+    S.exDone[id]=true;
+    S.totalEx++;
+    const nowAllDone=block.exercises.every(e=>S.exDone[e.id]);
+    if(nowAllDone&&block.xp&&block.stat){
+      S.xp+=block.xp;S.stats[block.stat]=(S.stats[block.stat]||1)+2;
+      earnPC(10,'bloque '+block.title);
+      const prevLv=calcLevel(S.xp-block.xp).lv;
+      const newLvData=calcLevel(S.xp);
+      sysmsg('Bloque completado: '+block.title+'. Stats mejorados.');
+      saveState();renderToday();updateUI();
+      if(newLvData.lv>prevLv){
+        setTimeout(()=>modalLevelUp(newLvData.lv,getRank(newLvData.lv),S.stats),200);
+      } else {
+        setTimeout(()=>modalBlockDone(block.title,block.xp,10),200);
+      }
+      _checkDailyComplete();
+      return;
+    } else {
+      showNotify('Ejercicio completado ✓','green');sfxCheck();
+    }
+  }
+  saveState();renderToday();updateUI();
+}
+
+function toggleMission(id,xp,stat,statv){
+  if(S.exDone[id]){
+    delete S.exDone[id];S.xp=Math.max(0,S.xp-xp);
+    if(statv>0)S.stats[stat]=Math.max(1,(S.stats[stat]||1)-statv);
+    S.totalEx=Math.max(0,S.totalEx-1);
+    showNotify('Misión cancelada');sfxUncheck();
+  } else {
+    S.exDone[id]=true;S.xp+=xp;
+    if(statv>0){S.stats[stat]=(S.stats[stat]||1)+statv;}
+    S.totalEx++;
+    earnPC(15,'mision');
+    showNotify('MISION COMPLETADA! +'+xp+' XP +15 PC','gold');
+    sysmsg('Misión completada. +'+statv+' '+stat.toUpperCase()+'.');
+    sfxBlock();
+  }
+  saveState();renderToday();updateUI();
+  _checkDailyComplete();
+}
+
+function toggleDD(id,xp,stat){
+  if(S.ddDone[id]){
+    delete S.ddDone[id];S.xp=Math.max(0,S.xp-xp);
+    S.stats[stat]=Math.max(1,(S.stats[stat]||1)-1);
+    sfxUncheck();
+  } else {
+    S.ddDone[id]=true;S.xp+=xp;S.stats[stat]=(S.stats[stat]||1)+1;
+    earnPC(8,'disciplina');
+    showNotify('+'+xp+' XP +8 PC — Disciplina reforzada','green');sfxCheck();
+  }
+  saveState();renderToday();updateUI();
+  _checkDailyComplete();
+}
+
+function toggleFood(id){
+  if(S.foodDone[id]){
+    delete S.foodDone[id];S.xp=Math.max(0,S.xp-40);
+    S.stats.dis=Math.max(1,(S.stats.dis||1)-1);sfxUncheck();
+  } else {
+    S.foodDone[id]=true;S.xp+=40;S.stats.dis=(S.stats.dis||1)+1;
+    earnPC(5,'comida');
+    showNotify('Comida registrada +40 XP +5 PC','green');sfxFood();
+  }
+  saveState();renderFood();updateUI();
+}
+
+function toggleBoss(id){
+  const m=BOSS_MISSIONS.find(b=>b.id===id);if(!m)return;
+  if(S.bossDone[id]){
+    delete S.bossDone[id];S.xp=Math.max(0,S.xp-m.xp);
+    S.stats[m.stat]=Math.max(1,(S.stats[m.stat]||1)-m.statv);
+    showNotify('Misión boss cancelada');sfxUncheck();
+  } else {
+    S.bossDone[id]=true;S.xp+=m.xp;S.stats[m.stat]=(S.stats[m.stat]||1)+m.statv;
+    const bossPC=Math.round(m.xp/5);
+    earnPC(bossPC,'boss '+m.name);
+    sysmsg('Misión principal completada: '+m.name);
+    const prevLvB=calcLevel(S.xp-m.xp).lv;
+    const newLvB=calcLevel(S.xp).lv;
+    saveState();renderWeekCal();updateUI();
+    setTimeout(()=>{
+      modalBossDefeated(m.name,m.xp,bossPC,m.crit);
+      if(newLvB>prevLvB) setTimeout(()=>modalLevelUp(newLvB,getRank(newLvB),S.stats),600);
+    },200);
+    return;
+  }
+  saveState();renderWeekCal();updateUI();
+}
+
+function _getDailyMissionIds(){
+  // Returns the IDs that count as "daily missions" for today's day type
+  const dow=new Date().getDay();
+  const plan=DAY_PLAN[dow];
+  const ids=[];
+
+  if(plan.type==='fuerza'){
+    // All blocks of today's routine must be fully done
+    const rutina=dow===3?RUTINA_B:RUTINA_A;
+    rutina.forEach(block=>{
+      if(block.xp){ // only scored blocks, not warmup
+        block.exercises.forEach(ex=>ids.push(ex.id));
+      }
+    });
+  } else if(plan.type==='hiit'){
+    ids.push('rope-done','rope-calor','rope-core');
+  } else if(plan.type==='mict'){
+    ids.push('rope-done','rope-calor','rope-core');
+  } else if(plan.type==='trote'){
+    ids.push('trote-done','trote-estirar');
+  }
+  // Always include discipline missions
+  DAILY_DISCIPLINE.forEach(m=>ids.push('DD:'+m.id));
+  return ids;
+}
+
+function _checkDailyComplete(){
+  if(S._dailyModalShown)return;
+  const dow=new Date().getDay();
+  const plan=DAY_PLAN[dow];
+
+  // For rest days, only check discipline
+  if(plan.type==='descanso'){
+    const allDD=DAILY_DISCIPLINE.every(m=>S.ddDone[m.id]);
+    if(allDD){
+      S._dailyModalShown=true;
+      saveState();
+      setTimeout(()=>modalDailyDone(),400);
+    }
+    return;
+  }
+
+  // For training days: check exercise missions + discipline
+  const rutina=dow===3?RUTINA_B:RUTINA_A;
+  let exDone=false;
+
+  if(plan.type==='fuerza'){
+    // At least all scored blocks must be complete
+    const scoredBlocks=rutina.filter(b=>b.xp);
+    exDone=scoredBlocks.length>0&&scoredBlocks.every(block=>
+      block.exercises.every(ex=>S.exDone[ex.id])
+    );
+  } else if(plan.type==='hiit'||plan.type==='mict'){
+    exDone=!!S.exDone['rope-done'];
+  } else if(plan.type==='trote'){
+    exDone=!!S.exDone['trote-done'];
+  }
+
+  const allDD=DAILY_DISCIPLINE.every(m=>S.ddDone[m.id]);
+
+  if(exDone&&allDD){
+    S._dailyModalShown=true;
+    saveState();
+    setTimeout(()=>modalDailyDone(),400);
+  }
+}
+
+function toggleBossCrit(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  const parent=el.parentElement;
+  if(parent){
+    const btns=parent.querySelectorAll('[onclick*="toggleBossCrit"]');
+    btns.forEach(b=>b.textContent=isOpen?'VER ▾':'OCULTAR ▴');
+  }
+}
+
+function _checkStreak(){
+  const milestones=[3,7,14,30];
+  if(milestones.includes(S.streak)&&!S['_streakModal_'+S.streak]){
+    S['_streakModal_'+S.streak]=true;
+    saveState();
+    setTimeout(()=>modalStreak(S.streak),400);
+  }
+}
+
+
+let ropeTimer=null,ropeSeconds=0,ropeIsHiit=false,ropeTotalTime=0,ropeRound=0,ropePhaseSeconds=0,ropeInWork=true;
+function formatTime(s){const m=Math.floor(s/60);const sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+
+function startRope(isHiit,total){
+  if(ropeTimer)clearInterval(ropeTimer);
+  ropeIsHiit=!!isHiit;ropeTotalTime=total;ropePhaseSeconds=isHiit?30:total;
+  ropeInWork=true;ropeRound=0;
+  const tdisp=document.getElementById('rope-time');
+  const pdisp=document.getElementById('rope-phase');
+  const rdisp=document.getElementById('rope-rounds');
+  let elapsed=0;
+  ropeTimer=setInterval(()=>{
+    elapsed++;
+    if(ropeIsHiit){
+      ropePhaseSeconds--;
+      if(ropePhaseSeconds<=0){
+        ropeInWork=!ropeInWork;
+        if(ropeInWork){ropeRound++;sfxBeepHigh();}else{sfxBeep();}
+        ropePhaseSeconds=60;
+      }
+      if(pdisp)pdisp.textContent=ropeInWork?'SALTANDO ↑':'DESCANSANDO ↓';
+      if(rdisp)rdisp.textContent='RONDA: '+(ropeRound+1)+' · FASE: '+formatTime(ropePhaseSeconds);
+      if(tdisp)tdisp.textContent=formatTime(Math.max(0,ropeTotalTime-elapsed));
+    } else {
+      if(tdisp)tdisp.textContent=formatTime(Math.max(0,ropeTotalTime-elapsed));
+      if(pdisp)pdisp.textContent='SALTANDO — RITMO CONTINUO';
+      if(rdisp)rdisp.textContent='TIEMPO: '+formatTime(elapsed);
+    }
+    if(elapsed>=ropeTotalTime){
+      clearInterval(ropeTimer);ropeTimer=null;
+      if(pdisp)pdisp.textContent='SESION COMPLETADA';
+      showNotify('Tiempo de cuerda completo!','gold');
+    }
+  },1000);
+}
+
+function stopRope(){if(ropeTimer){clearInterval(ropeTimer);ropeTimer=null;const p=document.getElementById('rope-phase');if(p)p.textContent='DETENIDO'}}
+
+// ============================================================
+// PUNTOS DE CAZADOR (PC) — SHOP SYSTEM
+// ============================================================
+const SHOP_ITEMS = [
+  // COMIDA
+  {id:'s1', cat:'food',   icon:'🍦', name:'Helado o postre',         sub:'Una porción, sin culpa',                  cost:80},
+  {id:'s2', cat:'food',   icon:'🍕', name:'Pizza o comida chatarra', sub:'Una comida libre — te la ganaste',        cost:180},
+  {id:'s3', cat:'food',   icon:'🍔', name:'Salida a comer fuera',    sub:'Restaurante, lo que quieras',             cost:300},
+  // ENTRETENIMIENTO
+  {id:'s4', cat:'entertainment', icon:'🎮', name:'2h de videojuegos sin culpa', sub:'Tiempo libre ganado',         cost:100},
+  {id:'s5', cat:'entertainment', icon:'📺', name:'Maratón de serie (4h)',        sub:'Netflix, YouTube, lo que sea', cost:150},
+  {id:'s6', cat:'entertainment', icon:'🎬', name:'Salida al cine o evento',      sub:'Entretenimiento pagado',       cost:250},
+  // DINERO
+  {id:'s7', cat:'money',  icon:'💸', name:'$3 para gastar en lo que quieras',  sub:'Efectivo o digital',           cost:200},
+  {id:'s8', cat:'money',  icon:'💵', name:'$5 para gastar libremente',          sub:'Sin justificación requerida',  cost:350},
+  {id:'s9', cat:'money',  icon:'💰', name:'$10 — Recompensa mayor',            sub:'Ahórralos o úsalos hoy',       cost:600},
+  // COMPRAS
+  {id:'s10',cat:'shopping',icon:'👟',name:'Compra pequeña ($5-10)',   sub:'Ropa, gadget, accesorio',               cost:500},
+  {id:'s11',cat:'shopping',icon:'🛍️',name:'Compra mediana ($10-20)',  sub:'Algo que tengas en mente',              cost:900},
+  {id:'s12',cat:'shopping',icon:'🏆',name:'Recompensa premium',       sub:'Algo grande — semanas de trabajo',      cost:1500},
+];
+
+const CAT_LABELS = {food:'🍕 COMIDA',entertainment:'🎮 ENTRETENIMIENTO',money:'💸 DINERO',shopping:'🛍️ COMPRAS'};
+
+function earnPC(amount,reason){
+  if(amount<=0)return;
+  S.pc+=amount; S.pcTotal+=amount; S.pcEarnedToday=(S.pcEarnedToday||0)+amount;
+  saveState();
+  updatePCDisplay();
+}
+function spendPC(amount){
+  S.pc=Math.max(0,S.pc-amount); S.pcSpent+=amount;
+  saveState(); updatePCDisplay();
+}
+
+function updatePCDisplay(){
+  const d=document.getElementById('pc-display');
+  const s=document.getElementById('pc-spent-display');
+  if(d)d.textContent=S.pc+' PC';
+  if(s)s.textContent='Gastados: '+S.pcSpent+' PC · Total ganado: '+S.pcTotal+' PC';
+}
+
+function getItemCost(id, defaultCost){
+  return S.shopCosts[id]!==undefined ? S.shopCosts[id] : defaultCost;
+}
+
+function renderShop(){
+  const el=document.getElementById('shop-list');
+  if(!el)return;
+  const cats=['food','entertainment','money','shopping'];
+  let html='';
+  cats.forEach(cat=>{
+    html+=`<div class="slbl" style="font-size:8px;margin-top:4px">${CAT_LABELS[cat]}</div><div style="margin:0 16px 10px;display:flex;flex-direction:column;gap:6px">`;
+    SHOP_ITEMS.filter(i=>i.cat===cat).forEach(item=>{
+      const cost=getItemCost(item.id, item.cost);
+      const canAfford=S.pc>=cost;
+      html+=`<div style="background:var(--card);border:1px solid ${canAfford?'rgba(240,180,41,.3)':'var(--border)'};padding:10px 12px;display:flex;align-items:center;gap:10px;transition:all .2s">
+        <div style="font-size:22px;flex-shrink:0">${item.icon}</div>
+        <div style="flex:1;min-width:0;cursor:${canAfford?'pointer':'default'}" onclick="redeemItem('${item.id}')">
+          <div style="font:700 13px/1.3 var(--font);color:${canAfford?'#fff':'var(--muted)'}">${item.name}</div>
+          <div style="font:400 10px/1 var(--mono);color:var(--muted);margin-top:3px">${item.sub}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0" id="cost-area-${item.id}">
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="font:700 12px/1 var(--mono);color:${canAfford?'var(--gold)':'var(--muted)'}" id="cost-lbl-${item.id}">${cost} PC</div>
+            <button onclick="event.stopPropagation();toggleEditCost('${item.id}',${cost})" style="width:16px;height:16px;border:1px solid var(--border);background:transparent;color:var(--muted);font:700 9px/1 var(--mono);cursor:pointer;line-height:1" title="Editar costo">✎</button>
+          </div>
+          ${canAfford?'<div style="font-size:8px;color:var(--green);font-family:var(--mono)">DISPONIBLE</div>':''}
+          <div id="edit-area-${item.id}" style="display:none;flex-direction:column;gap:4px;align-items:flex-end">
+            <input id="edit-input-${item.id}" type="number" min="1" max="9999" value="${cost}" style="width:70px;background:rgba(255,255,255,.06);border:1px solid var(--gold);color:var(--gold);font:700 11px/1 var(--mono);padding:4px 6px;outline:none;text-align:center">
+            <div style="display:flex;gap:4px">
+              <button onclick="event.stopPropagation();saveItemCost('${item.id}')" style="padding:3px 8px;background:rgba(45,206,137,.1);border:1px solid rgba(45,206,137,.3);color:var(--green);font:700 8px/1 var(--mono);cursor:pointer">OK</button>
+              <button onclick="event.stopPropagation();cancelEditCost('${item.id}','${item.id}')" style="padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font:700 8px/1 var(--mono);cursor:pointer">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function toggleEditCost(id, currentCost){
+  const area=document.getElementById('edit-area-'+id);
+  if(!area)return;
+  const isVisible=area.style.display!=='none'&&area.style.display!=='';
+  area.style.display=isVisible?'none':'flex';
+  if(!isVisible){
+    const inp=document.getElementById('edit-input-'+id);
+    if(inp){inp.focus();inp.select();}
+  }
+}
+
+function saveItemCost(id){
+  const inp=document.getElementById('edit-input-'+id);
+  if(!inp)return;
+  const val=parseInt(inp.value);
+  if(!val||val<1){showNotify('Ingresa un número válido');return;}
+  S.shopCosts[id]=val;
+  saveState();
+  renderShop();
+  showNotify('Costo actualizado a '+val+' PC','green');
+  sfxCheck();
+}
+
+function cancelEditCost(id){
+  const area=document.getElementById('edit-area-'+id);
+  if(area)area.style.display='none';
+}
+
+function toggleCrEdit(id){
+  const area=document.getElementById('cr-edit-area-'+id);
+  if(!area)return;
+  const vis=area.style.display==='flex';
+  area.style.display=vis?'none':'flex';
+  if(!vis){const inp=document.getElementById('cr-edit-input-'+id);if(inp){inp.focus();inp.select();}}
+}
+
+function saveCustomCost(id){
+  const inp=document.getElementById('cr-edit-input-'+id);
+  if(!inp)return;
+  const val=parseInt(inp.value);
+  if(!val||val<1){showNotify('Ingresa un número válido');return;}
+  const r=S.customRewards.find(r=>r.id===id);
+  if(r){r.cost=val;saveState();renderCustomRewards();showNotify('Costo actualizado a '+val+' PC','green');sfxCheck();}
+}
+
+
+function renderCustomRewards(){
+  const el=document.getElementById('custom-rewards-list');
+  if(!el)return;
+  if(!S.customRewards.length){
+    el.innerHTML='<div style="margin:0 16px 10px;font:400 10px/1.6 var(--mono);color:var(--muted)">Aún no tienes recompensas personalizadas. Créalas abajo.</div>';
+    return;
+  }
+  el.innerHTML='<div style="margin:0 16px 10px;display:flex;flex-direction:column;gap:6px">'+
+    S.customRewards.map(r=>{
+      const canAfford=S.pc>=r.cost;
+      const catIcon={food:'🍕',entertainment:'🎮',money:'💸',shopping:'🛍️'}[r.cat]||'⭐';
+      return`<div style="background:var(--card);border:1px solid ${canAfford?'rgba(168,85,247,.35)':'var(--border)'};padding:10px 12px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:20px;flex-shrink:0">${catIcon}</div>
+        <div style="flex:1;min-width:0;cursor:${canAfford?'pointer':'default'}" onclick="redeemCustom('${r.id}')">
+          <div style="font:700 13px/1.3 var(--font);color:${canAfford?'#fff':'var(--muted)'}">${r.name}</div>
+          <div id="cr-cost-lbl-${r.id}" style="font:700 11px/1 var(--mono);color:${canAfford?'var(--purple)':'var(--muted)'};margin-top:3px">${r.cost} PC${canAfford?' — DISPONIBLE':''}</div>
+          <div id="cr-edit-area-${r.id}" style="display:none;margin-top:6px;display:none">
+            <div style="display:flex;align-items:center;gap:4px">
+              <input id="cr-edit-input-${r.id}" type="number" min="1" max="9999" value="${r.cost}" style="width:65px;background:rgba(255,255,255,.06);border:1px solid var(--purple);color:var(--purple);font:700 11px/1 var(--mono);padding:4px 6px;outline:none;text-align:center">
+              <button onclick="event.stopPropagation();saveCustomCost('${r.id}')" style="padding:3px 8px;background:rgba(45,206,137,.1);border:1px solid rgba(45,206,137,.3);color:var(--green);font:700 8px/1 var(--mono);cursor:pointer">OK</button>
+              <button onclick="event.stopPropagation();document.getElementById('cr-edit-area-${r.id}').style.display='none'" style="padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font:700 8px/1 var(--mono);cursor:pointer">✕</button>
+            </div>
+          </div>
+        </div>
+        <button onclick="event.stopPropagation();toggleCrEdit('${r.id}')" style="width:20px;height:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font:700 9px/1 var(--mono);cursor:pointer;flex-shrink:0" title="Editar costo">✎</button>
+        <button onclick="deleteCustomReward('${r.id}')" style="width:20px;height:20px;border:1px solid rgba(245,54,92,.3);background:transparent;color:var(--red);font:700 9px/1 var(--mono);cursor:pointer;flex-shrink:0">✕</button>
+      </div>`;
+    }).join('')+'</div>';
+}
+
+function renderRewardHistory(){
+  const el=document.getElementById('rewards-history');
+  if(!el)return;
+  if(!S.redeemHistory.length){
+    el.innerHTML='<div style="margin:0 16px 14px;font:400 10px/1.6 var(--mono);color:var(--muted)">Aún no has canjeado ninguna recompensa. ¡Sigue entrenando!</div>';
+    return;
+  }
+  const recent=[...S.redeemHistory].reverse().slice(0,10);
+  el.innerHTML='<div style="margin:0 16px 14px;display:flex;flex-direction:column;gap:4px">'+
+    recent.map(h=>`<div style="background:var(--card);border:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:16px">${h.icon}</div>
+      <div style="flex:1"><div style="font:600 12px/1 var(--font);color:var(--text)">${h.name}</div>
+      <div style="font:400 9px/1 var(--mono);color:var(--muted);margin-top:2px">${h.date}</div></div>
+      <div style="font:700 10px/1 var(--mono);color:var(--red)">-${h.cost} PC</div>
+    </div>`).join('')+'</div>';
+}
+
+function redeemItem(id){
+  const item=SHOP_ITEMS.find(i=>i.id===id);
+  if(!item)return;
+  const cost=getItemCost(item.id, item.cost);
+  if(S.pc<cost){showNotify('Necesitas '+cost+' PC (tienes '+S.pc+')');return;}
+  showConfirm(
+    '¿Canjear '+item.icon+' '+item.name+'?',
+    'Costo: '+cost+' PC · Saldo tras canje: '+(S.pc-cost)+' PC',
+    ()=>{
+      spendPC(cost);
+      S.redeemHistory.push({icon:item.icon,name:item.name,cost:cost,date:todayKey});
+      saveState();renderShop();renderRewardHistory();
+      setTimeout(()=>modalRedeemed(item.icon,item.name,cost),100);
+    },
+    'CANJEAR','var(--gold)'
+  );
+}
+
+function redeemCustom(id){
+  const r=S.customRewards.find(i=>i.id===id);
+  if(!r)return;
+  if(S.pc<r.cost){showNotify('Necesitas '+r.cost+' PC (tienes '+S.pc+')');return;}
+  const catIcon={food:'🍕',entertainment:'🎮',money:'💸',shopping:'🛍️'}[r.cat]||'⭐';
+  showConfirm(
+    '¿Canjear '+catIcon+' '+r.name+'?',
+    'Costo: '+r.cost+' PC · Saldo tras canje: '+(S.pc-r.cost)+' PC',
+    ()=>{
+      spendPC(r.cost);
+      S.redeemHistory.push({icon:catIcon,name:r.name,cost:r.cost,date:todayKey});
+      saveState();renderCustomRewards();renderRewardHistory();
+      setTimeout(()=>modalRedeemed(catIcon,r.name,r.cost),100);
+    },
+    'CANJEAR','var(--gold)'
+  );
+}
+
+function addCustomReward(){
+  const name=document.getElementById('rw-name').value.trim();
+  if(!name){showNotify('Escribe el nombre de la recompensa');return;}
+  const cost=parseInt(document.getElementById('rw-cost').value)||100;
+  const cat=document.getElementById('rw-cat').value;
+  S.customRewards.push({id:'cr_'+Date.now(),name,cost,cat});
+  document.getElementById('rw-name').value='';
+  document.getElementById('rw-cost').value='';
+  saveState();renderCustomRewards();
+  showNotify('Recompensa creada ✓','green');sfxCheck();
+}
+
+function deleteCustomReward(id){
+  S.customRewards=S.customRewards.filter(r=>r.id!==id);
+  saveState();renderCustomRewards();
+}
+
+
+function exportData(){
+  try{
+    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    // Try native share (mobile) first
+    if(navigator.share){
+      navigator.share({title:'Backup Cazador',text:encoded});
+      return;
+    }
+    // Fallback: copy to clipboard
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(encoded).then(()=>{
+        showNotify('Código copiado al portapapeles ✓','green');
+      }).catch(()=>showBackupModal(encoded));
+    } else {
+      showBackupModal(encoded);
+    }
+  }catch(e){showNotify('Error al exportar');}
+}
+
+function showBackupModal(code){
+  const ta=document.getElementById('backup-input');
+  if(ta){ta.value=code;ta.select();}
+  showNotify('Copia el código del cuadro de texto ↑','green');
+  // scroll to backup section
+  document.getElementById('backup-input').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function importData(){
+  const ta=document.getElementById('backup-input');
+  if(!ta||!ta.value.trim()){showNotify('Pega tu código de backup primero');return;}
+  try{
+    const decoded=JSON.parse(decodeURIComponent(escape(atob(ta.value.trim()))));
+    if(typeof decoded!=='object'||decoded.xp===undefined){throw new Error('invalid');}
+    showConfirm(
+      '¿Restaurar este backup?',
+      'Se reemplazará todo el progreso actual en este dispositivo.',
+      ()=>{
+        Object.assign(S,decoded);saveState();ta.value='';
+        renderToday();renderWeekCal();renderFood();renderCustomMeals();updateUI();renderActivityGrid();
+        showNotify('Progreso restaurado ✓','gold');sfxLevelUp();
+      },
+      'RESTAURAR','var(--cyan)'
+    );
+  }catch(e){
+    showNotify('Código inválido — verifica que lo copiaste completo');
+  }
+}
+
+
+function openTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',['hoy','semana','nutricion','progreso','tienda'][i]===name);
+  });
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.toggle('active',p.id==='tab-'+name);
+  });
+  if(name==='nutricion'){renderFood();renderCustomMeals();}
+  if(name==='semana')renderWeekCal();
+  if(name==='tienda'){renderShop();renderCustomRewards();renderRewardHistory();updatePCDisplay();}
+  if(name==='progreso')renderActivityGrid();
+}
+
+// ============================================================
+// NOTIFY + SYS
+// ============================================================
+let ntTimer;
+function showNotify(msg,type=''){
+  const n=document.getElementById('notify');
+  n.textContent=msg;n.className='notify show'+(type?' '+type:'');
+  clearTimeout(ntTimer);ntTimer=setTimeout(()=>n.classList.remove('show'),2500);
+}
+const SYS_MSGS=[
+  '[ SISTEMA ] Quito, 2850 msnm — Recomposición corporal activa.',
+  '[ SISTEMA ] Proteína objetivo: 131-164g/día. Déficit máximo: 40%.',
+  '[ SISTEMA ] COM-HI = HIIT + Fuerza: la combinación más efectiva contra grasa abdominal.',
+  '[ SISTEMA ] Babrova (2025): ≥10 series/músculo/semana minimiza pérdida de masa magra.',
+  '[ SISTEMA ] No uses solo la balanza — mide cintura, cadera y muslos.'
+];
+let sysIdx=0;
+function sysmsg(txt){document.getElementById('sys-bar').textContent='[ SISTEMA ] '+txt;}
+setInterval(()=>{sysIdx=(sysIdx+1)%SYS_MSGS.length;document.getElementById('sys-bar').textContent=SYS_MSGS[sysIdx];},8000);
+
+function resetDay(){
+  showConfirm(
+    '¿Reiniciar el día?',
+    'Se perderá el XP y PC ganados hoy. El progreso histórico se mantiene.',
+    ()=>{
+      const lostXp=[...Object.keys(S.exDone),...Object.keys(S.ddDone),...Object.keys(S.foodDone),...Object.keys(S.customDone)].length*20;
+      S.exDone={};S.ddDone={};S.foodDone={};S.customDone={};S._dailyModalShown=false;
+      S.xp=Math.max(0,S.xp-lostXp);
+      saveState();renderToday();updateUI();showNotify('Día reiniciado. ¡A entrenar!');
+    },
+    'REINICIAR','var(--red)'
+  );
+}
+
+// ============================================================
+// MUSIC PLAYER
+// ============================================================
+let _tracks=[];          // {name, url} — object URLs, only live this session
+let _trackIdx=0;
+let _audio=null;
+let _shuffle=false;
+let _shuffleOrder=[];
+let _progressTimer=null;
+
+function _getAudio(){
+  if(!_audio){
+    _audio=new Audio();
+    _audio.addEventListener('ended',()=>playerNext());
+    _audio.addEventListener('timeupdate',_updateProgress);
+    _audio.addEventListener('loadedmetadata',_updateStatus);
+  }
+  return _audio;
+}
+
+function playerLoadFiles(e){
+  const files=Array.from(e.target.files);
+  if(!files.length)return;
+  // Revoke old object URLs to free memory
+  _tracks.forEach(t=>{if(t.url)URL.revokeObjectURL(t.url)});
+  // Build track list, preserving existing + adding new
+  const newTracks=files.map(f=>({name:f.name.replace(/\.[^/.]+$/,''),url:URL.createObjectURL(f)}));
+  _tracks=[..._tracks,...newTracks];
+  _buildShuffleOrder();
+  _updatePlaylistInfo();
+  // If nothing playing, start first new track
+  if(_tracks.length===newTracks.length){
+    _trackIdx=0;_loadTrack(_trackIdx);
+  }
+  showNotify(_tracks.length+' canciones en playlist','green');
+  // Save track names (not URLs) so they survive page refresh label
+  S._trackNames=_tracks.map(t=>t.name);
+  saveState();
+  // reset input so same files can be re-added after clear
+  e.target.value='';
+}
+
+function _buildShuffleOrder(){
+  _shuffleOrder=[..._tracks.map((_,i)=>i)];
+  for(let i=_shuffleOrder.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [_shuffleOrder[i],_shuffleOrder[j]]=[_shuffleOrder[j],_shuffleOrder[i]];
+  }
+}
+
+function _loadTrack(idx){
+  if(!_tracks.length)return;
+  _trackIdx=((idx%_tracks.length)+_tracks.length)%_tracks.length;
+  const t=_tracks[_trackIdx];
+  const a=_getAudio();
+  a.src=t.url;
+  a.load();
+  document.getElementById('player-track-name').textContent=t.name;
+  _updateStatus();
+  _updatePlaylistInfo();
+}
+
+function playerToggle(){
+  if(!_tracks.length){showNotify('Sube canciones primero con el botón + SUBIR');return;}
+  const a=_getAudio();
+  if(a.paused){
+    if(!a.src||a.src===''){_loadTrack(_trackIdx);}
+    a.play().catch(()=>{});
+    document.getElementById('play-btn').innerHTML='&#9646;&#9646;';
+    document.getElementById('player-track-status').textContent='REPRODUCIENDO';
+  } else {
+    a.pause();
+    document.getElementById('play-btn').innerHTML='&#9654;';
+    document.getElementById('player-track-status').textContent='EN PAUSA';
+  }
+}
+
+function playerNext(){
+  if(!_tracks.length)return;
+  let next;
+  if(_shuffle){
+    const pos=_shuffleOrder.indexOf(_trackIdx);
+    next=_shuffleOrder[(pos+1)%_shuffleOrder.length];
+  } else {
+    next=(_trackIdx+1)%_tracks.length;
+  }
+  _loadTrack(next);
+  const a=_getAudio();
+  a.play().catch(()=>{});
+  document.getElementById('play-btn').innerHTML='&#9646;&#9646;';
+  document.getElementById('player-track-status').textContent='REPRODUCIENDO';
+}
+
+function playerPrev(){
+  if(!_tracks.length)return;
+  const a=_getAudio();
+  // If more than 3s in, restart current track instead of going back
+  if(a.currentTime>3){a.currentTime=0;return;}
+  let prev;
+  if(_shuffle){
+    const pos=_shuffleOrder.indexOf(_trackIdx);
+    prev=_shuffleOrder[(pos-1+_shuffleOrder.length)%_shuffleOrder.length];
+  } else {
+    prev=(_trackIdx-1+_tracks.length)%_tracks.length;
+  }
+  _loadTrack(prev);
+  a.play().catch(()=>{});
+  document.getElementById('play-btn').innerHTML='&#9646;&#9646;';
+  document.getElementById('player-track-status').textContent='REPRODUCIENDO';
+}
+
+function playerToggleShuffle(){
+  _shuffle=!_shuffle;
+  if(_shuffle)_buildShuffleOrder();
+  const btn=document.getElementById('shuffle-btn');
+  btn.className='pctrl'+(_shuffle?' shuffle-on':'');
+  showNotify(_shuffle?'Shuffle activado ↑↓':'Shuffle desactivado','green');
+}
+
+function playerSeek(e){
+  if(!_tracks.length)return;
+  const a=_getAudio();
+  if(!a.duration)return;
+  const bar=document.getElementById('player-progress');
+  const rect=bar.getBoundingClientRect();
+  const pct=(e.clientX-rect.left)/rect.width;
+  a.currentTime=pct*a.duration;
+}
+
+function _updateProgress(){
+  const a=_audio;if(!a||!a.duration)return;
+  const pct=(a.currentTime/a.duration)*100;
+  const fill=document.getElementById('player-progress-fill');
+  if(fill)fill.style.width=pct+'%';
+}
+
+function _updateStatus(){
+  const a=_audio;
+  const name=document.getElementById('player-track-name');
+  const status=document.getElementById('player-track-status');
+  if(!_tracks.length){
+    if(name)name.textContent='Sin canciones cargadas';
+    if(status)status.textContent='REPRODUCTOR — SUBE TUS CANCIONES';
+    return;
+  }
+  const t=_tracks[_trackIdx];
+  if(name)name.textContent=t?t.name:'—';
+  if(a&&!a.paused){
+    if(status)status.textContent='REPRODUCIENDO · '+((_trackIdx+1))+' / '+_tracks.length;
+  } else {
+    if(status)status.textContent='EN PAUSA · '+((_trackIdx+1))+' / '+_tracks.length;
+  }
+}
+
+function _updatePlaylistInfo(){
+  const el=document.getElementById('player-playlist-info');
+  if(el){
+    if(!_tracks.length){el.textContent='0 canciones';return;}
+    el.textContent=_tracks.length+' canción'+((_tracks.length!==1)?'es':'')+(_shuffle?' · ↑↓':'');
+  }
+}
+
+function playerClear(){
+  if(!_tracks.length)return;
+  const a=_getAudio();
+  a.pause();a.src='';
+  _tracks.forEach(t=>URL.revokeObjectURL(t.url));
+  _tracks=[];_trackIdx=0;_shuffleOrder=[];
+  S._trackNames=[];saveState();
+  document.getElementById('play-btn').innerHTML='&#9654;';
+  document.getElementById('player-progress-fill').style.width='0%';
+  _updateStatus();_updatePlaylistInfo();
+  showNotify('Playlist limpiada');
+}
+
+// Restore track names label on reload (URLs are gone but names show)
+function _initPlayerUI(){
+  if(S._trackNames&&S._trackNames.length){
+    document.getElementById('player-playlist-info').textContent=
+      S._trackNames.length+' canción'+(S._trackNames.length!==1?'es':'')+' (vuelve a subir para reproducir)';
+    document.getElementById('player-track-name').textContent=S._trackNames[0]||'—';
+    document.getElementById('player-track-status').textContent='CARGA LAS CANCIONES DE NUEVO PARA REPRODUCIR';
+  }
+}
+
+// ============================================================
+// PWA — SERVICE WORKER + NOTIFICATIONS
+// ============================================================
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      if(S.notifOn&&S.notifTimeTrain){
+        setTimeout(()=>{
+          const target=reg.active||reg.installing||reg.waiting;
+          if(target)target.postMessage({type:'SCHEDULE',timeTrain:S.notifTimeTrain,timeSummary:S.notifTimeSummary,dayPlan:DAY_PLAN.map(d=>d.badge)});
+        },1000);
+      }
+    }).catch(()=>{});
+  });
+}
+
+function toggleNotifPanel(){
+  const p=document.getElementById('notif-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block'){
+    if(S.notifTimeTrain)document.getElementById('notif-time-train').value=S.notifTimeTrain;
+    if(S.notifTimeSummary)document.getElementById('notif-time-summary').value=S.notifTimeSummary;
+  }
+}
+
+function requestNotifPermission(){
+  if(!('Notification' in window)){
+    _setNotifMsg('Tu navegador no soporta notificaciones. Usa Chrome en Android.');return;
+  }
+  const timeTrain=document.getElementById('notif-time-train').value||'17:00';
+  const timeSummary=document.getElementById('notif-time-summary').value||'21:00';
+  Notification.requestPermission().then(perm=>{
+    if(perm==='granted'){
+      S.notifOn=true;S.notifTimeTrain=timeTrain;S.notifTimeSummary=timeSummary;
+      saveState();_updateNotifUI();
+      navigator.serviceWorker.ready.then(reg=>{
+        const target=reg.active||reg.installing||reg.waiting;
+        if(target)target.postMessage({type:'SCHEDULE',timeTrain,timeSummary,dayPlan:DAY_PLAN.map(d=>d.badge)});
+      }).catch(()=>{});
+      _setNotifMsg('✓ Activado — entrenamiento: '+timeTrain+' · resumen: '+timeSummary);
+      showNotify('Notificaciones activadas ✓','green');
+    } else if(perm==='denied'){
+      _setNotifMsg('Permiso denegado. Ve a Ajustes del sistema → App → Notificaciones y actívalas.');
+    } else {
+      _setNotifMsg('Permiso no concedido. Inténtalo de nuevo.');
+    }
+  });
+}
+
+function testNotification(){
+  if(!('Notification' in window)){_setNotifMsg('Navegador no soporta notificaciones.');return;}
+  if(Notification.permission!=='granted'){_setNotifMsg('Activa las notificaciones primero.');return;}
+  const dow=new Date().getDay();
+  const plan=DAY_PLAN[dow];
+  new Notification('[ SISTEMA ] Cazador',{
+    body:'Prueba exitosa · Hoy: '+plan.badge+' '+plan.icon,
+    tag:'cazador-test',
+  });
+  _setNotifMsg('Notificación de prueba enviada. Si no aparece, revisa los permisos del sistema.');
+}
+
+function _updateNotifUI(){
+  const dot=document.getElementById('notif-dot');
+  const lbl=document.getElementById('notif-state');
+  const on=S.notifOn&&typeof Notification!=='undefined'&&Notification.permission==='granted';
+  if(dot)dot.style.background=on?'var(--green)':'var(--muted)';
+  if(lbl){lbl.textContent=on?'ON':'OFF';lbl.style.color=on?'var(--green)':'var(--muted)';}
+}
+
+function _setNotifMsg(msg){
+  const el=document.getElementById('notif-status-msg');if(el)el.textContent=msg;
+}
+
+// Fallback interval check when app is open (covers iOS + cases where SW isn't active)
+function _checkNotifTime(){
+  if(!S.notifOn||typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  const now=new Date();
+  const hhmm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  const key='_nf_'+todayKey+'_';
+  if(hhmm===S.notifTimeTrain&&!S[key+'t']){
+    S[key+'t']=true;saveState();
+    const dow=now.getDay();const plan=DAY_PLAN[dow];
+    const ddPend=DAILY_DISCIPLINE.filter(m=>!S.ddDone[m.id]);
+    const body=plan.icon+' Hoy: '+plan.badge+(ddPend.length?'\nPendiente: '+ddPend.slice(0,2).map(m=>m.name).join(', '):'');
+    new Notification('[ SISTEMA ] ¡A entrenar, Cazador!',{body,tag:'cazador-train'});
+  }
+  if(hhmm===S.notifTimeSummary&&!S[key+'s']){
+    S[key+'s']=true;saveState();
+    const done=Object.keys(S.exDone).length+Object.keys(S.ddDone).length;
+    new Notification('[ SISTEMA ] Resumen del día',{
+      body:'Completaste '+done+' misiones · +'+(S.pcEarnedToday||0)+' PC · Nivel '+S.level,
+      tag:'cazador-summary'
+    });
+  }
+}
+setInterval(_checkNotifTime,30000);
+
+initSoundUI();
+_initPlayerUI();
+_updateNotifUI();
+renderToday();
+renderWeekCal();
+renderFood();
+renderCustomMeals();
+updateUI();
+updatePCDisplay();
+</script>
+</body>
+</html>
